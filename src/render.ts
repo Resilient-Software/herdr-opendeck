@@ -68,7 +68,9 @@ export function spaceTile(space: Workspace, info: GitInfo, opt: TileOpts): strin
 	const footerColor = opt.footerRed ? COL_RED : sub;
 
 	let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">`;
-	svg += `<rect width="144" height="144" fill="${background}"/>`;
+	if (background !== COL_BG) {
+		svg += `<rect width="144" height="144" fill="${background}"/>`;
+	}
 	if (opt.dim) {
 		svg += `<g opacity="0.45">`;
 	}
@@ -99,7 +101,6 @@ export function pagerTile(left: boolean, current: number, total: number, accent:
 	const arrow = left ? "←" : "→";
 	const arrowColor = accent ? COL_GREEN : COL_TEXT;
 	let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">`;
-	svg += `<rect width="144" height="144" fill="${COL_BG}"/>`;
 	if (dim) {
 		svg += `<g opacity="0.45">`;
 	}
@@ -114,13 +115,12 @@ export function pagerTile(left: boolean, current: number, total: number, accent:
 
 export function emptyTile(): string {
 	return dataUrl(
-		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144"><rect width="144" height="144" fill="${COL_BG}"/><circle cx="72" cy="72" r="7" fill="${COL_SURFACE}"/></svg>`,
+		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144"><circle cx="72" cy="72" r="7" fill="${COL_SURFACE}"/></svg>`,
 	);
 }
 
 export function newSpaceTile(dim: boolean): string {
 	let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">`;
-	svg += `<rect width="144" height="144" fill="${COL_BG}"/>`;
 	if (dim) {
 		svg += `<g opacity="0.45">`;
 	}
@@ -135,7 +135,6 @@ export function newSpaceTile(dim: boolean): string {
 
 function messageTile(lines: string[], color: string): string {
 	let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">`;
-	svg += `<rect width="144" height="144" fill="${COL_BG}"/>`;
 	let y = 78 - 14 * (lines.length - 1);
 	for (const line of lines) {
 		svg += `<text x="72" y="${y}" fill="${color}" font-family="sans-serif" font-size="17" font-weight="600" text-anchor="middle">${esc(line)}</text>`;

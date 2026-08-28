@@ -3,7 +3,7 @@
 	"Description": "Mirror your Herdr session onto the Stream Deck: live workspace tiles with repository, branch, and agent status. Press a tile to focus that workspace. Works with every agent Herdr runs \u2014 Claude Code, Codex, Pi, opencode, Cursor, Grok, Copilot, Hermes, and more (21 detected out of the box).",
 	"UUID": "com.resilientsoftware.herdrdeck",
 	"Author": "Thomas Rooney",
-	"Version": "0.2.0.0",
+	"Version": "0.3.0.0",
 	"Icon": "icons/plugin",
 	"Category": "Herdr Deck",
 	"CategoryIcon": "icons/list-space",
