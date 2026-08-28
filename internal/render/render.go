@@ -146,6 +146,22 @@ func messageTile(lines []string, color string) string {
 	return dataURL(b.String())
 }
 
+func NewSpaceTile(dim bool) string {
+	var b strings.Builder
+	b.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">`)
+	fmt.Fprintf(&b, `<rect width="144" height="144" fill="%s"/>`, colBg)
+	if dim {
+		b.WriteString(`<g opacity="0.45">`)
+	}
+	fmt.Fprintf(&b, `<text x="72" y="86" fill="%s" font-family="sans-serif" font-size="64" font-weight="600" text-anchor="middle">+</text>`, colGreen)
+	fmt.Fprintf(&b, `<text x="72" y="124" fill="%s" font-family="sans-serif" font-size="15" text-anchor="middle">NEW SPACE</text>`, colSubtext)
+	if dim {
+		b.WriteString(`</g>`)
+	}
+	b.WriteString(`</svg>`)
+	return dataURL(b.String())
+}
+
 func ConnectingTile() string {
 	return messageTile([]string{"HERDR", "CONNECTING"}, colOverlay)
 }

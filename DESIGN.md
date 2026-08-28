@@ -66,8 +66,11 @@ Pagers exist only while spaces exceed the participating keys. They are controls,
 |-----|-------|------------|
 | Space | Focus workspace in Herdr **and raise the application hosting the Herdr client** (e.g. the terminal it runs in) | Same as press; no hidden alternate action |
 | Pager `←` / `→` (only when present) | One page in that direction | Same as press |
+| New Herdr Space (separate action, placed like any key) | Create a workspace (`herdr workspace create --focus`) and raise the hosting application | Same as press |
 | Empty key | No-op | No-op |
 | Key without the action | Never touched | Never touched |
+
+The New Herdr Space key renders as a green `+` with `NEW SPACE` below; it dims and goes inert while Herdr is offline.
 
 - Content keys focus exactly once on key-up. Holding them must not create a second action.
 - Pager keys act once on key-up, one page in their direction. Do not auto-repeat or wrap at either end.

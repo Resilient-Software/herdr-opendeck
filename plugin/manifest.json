@@ -29,6 +29,16 @@
 			"SupportedInMultiActions": false,
 			"DisableAutomaticStates": true,
 			"States": [{ "Image": "icons/space" }]
+		},
+		{
+			"Name": "New Herdr Space",
+			"UUID": "com.thomasrooney.herdrdeck.newspace",
+			"Icon": "icons/newspace",
+			"Tooltip": "Create a new Herdr workspace and focus it",
+			"Controllers": ["Keypad"],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [{ "Image": "icons/newspace" }]
 		}
 	]
 }

@@ -16,7 +16,10 @@ import (
 	"github.com/ThomasRooney/herdr-opendeck/internal/render"
 )
 
-const spaceAction = "com.thomasrooney.herdrdeck.space"
+const (
+	spaceAction    = "com.thomasrooney.herdrdeck.space"
+	newSpaceAction = "com.thomasrooney.herdrdeck.newspace"
+)
 
 const (
 	offlineAfterFailures = 3
@@ -26,6 +29,7 @@ const (
 
 type instance struct {
 	context string
+	action  string
 	row     int
 	column  int
 }
@@ -36,6 +40,7 @@ const (
 	roleSpace keyRole = iota
 	rolePagerLeft
 	rolePagerRight
+	roleNewSpace
 	roleInert
 )
 
@@ -100,12 +105,13 @@ func main() {
 		}
 		switch event.Event {
 		case "willAppear":
-			if event.Action != spaceAction {
+			if event.Action != spaceAction && event.Action != newSpaceAction {
 				continue
 			}
 			a.mu.Lock()
 			a.instances[event.Context] = instance{
 				context: event.Context,
+				action:  event.Action,
 				row:     event.Payload.Coordinates.Row,
 				column:  event.Payload.Coordinates.Column,
 			}
@@ -189,8 +195,8 @@ func sortedSpaces(snapshot *herdr.Snapshot) []herdr.Workspace {
 
 // render assumes a.mu is held.
 func (a *app) render() {
-	ordered := a.orderedInstances()
-	if len(ordered) == 0 {
+	all := a.orderedInstances()
+	if len(all) == 0 {
 		return
 	}
 	for context := range a.roles {
@@ -198,6 +204,22 @@ func (a *app) render() {
 	}
 	for context := range a.assigned {
 		delete(a.assigned, context)
+	}
+
+	ordered := make([]instance, 0, len(all))
+	ready := a.everConnected && a.snapshot != nil && a.failures < offlineAfterFailures
+	for _, inst := range all {
+		if inst.action == newSpaceAction {
+			if ready {
+				a.roles[inst.context] = roleNewSpace
+			}
+			a.setImage(inst.context, render.NewSpaceTile(!ready))
+			continue
+		}
+		ordered = append(ordered, inst)
+	}
+	if len(ordered) == 0 {
+		return
 	}
 
 	if !a.everConnected || a.snapshot == nil {
@@ -320,6 +342,17 @@ func (a *app) keyUp(context string) {
 		a.pendingSince = time.Now()
 		a.render()
 		go a.focus(workspaceID)
+	case roleNewSpace:
+		go func() {
+			err := a.bridge.CreateWorkspace()
+			if err == nil {
+				err = herdr.RaiseClient()
+			}
+			if err != nil {
+				_ = a.client.ShowAlert(context)
+				_ = a.client.LogMessage("create workspace failed: " + err.Error())
+			}
+		}()
 	}
 }
 

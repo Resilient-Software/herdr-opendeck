@@ -159,6 +159,11 @@ func (b *Bridge) FocusWorkspace(workspaceID string) error {
 	return err
 }
 
+func (b *Bridge) CreateWorkspace() error {
+	_, err := b.run("workspace", "create", "--focus")
+	return err
+}
+
 func (s *Snapshot) FirstWorkspace() *Workspace {
 	var first *Workspace
 	for i := range s.Workspaces {
