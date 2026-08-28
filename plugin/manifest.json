@@ -1,33 +1,23 @@
 {
 	"Name": "Herdr Deck",
 	"Author": "Thomas Rooney",
-	"Version": "0.1.0",
+	"Version": "0.2.0",
 	"Icon": "icons/plugin",
 	"Category": "Herdr",
-	"CategoryIcon": "icons/plugin",
+	"CategoryIcon": "icons/list-space",
 	"SDKVersion": 2,
-	"Software": { "MinimumVersion": "6.0" },
+	"Software": { "MinimumVersion": "7.1" },
 	"OS": [
 		{ "Platform": "mac", "MinimumVersion": "10.15" },
-		{ "Platform": "linux" },
-		{ "Platform": "windows", "MinimumVersion": "10" }
+		{ "Platform": "linux" }
 	],
-	"CodePath": "bin/herdr-opendeck",
-	"CodePathMac": "bin/herdr-opendeck",
-	"CodePathLin": "x86_64-unknown-linux-gnu/bin/herdr-opendeck",
-	"CodePathWin": "x86_64-pc-windows-msvc/bin/herdr-opendeck.exe",
-	"CodePaths": {
-		"aarch64-apple-darwin": "bin/herdr-opendeck",
-		"x86_64-apple-darwin": "bin/herdr-opendeck",
-		"x86_64-unknown-linux-gnu": "x86_64-unknown-linux-gnu/bin/herdr-opendeck",
-		"aarch64-unknown-linux-gnu": "aarch64-unknown-linux-gnu/bin/herdr-opendeck",
-		"x86_64-pc-windows-msvc": "x86_64-pc-windows-msvc/bin/herdr-opendeck.exe"
-	},
+	"CodePath": "bin/plugin.mjs",
+	"Nodejs": { "Version": "24" },
 	"Actions": [
 		{
 			"Name": "Herdr Space",
 			"UUID": "com.thomasrooney.herdrdeck.space",
-			"Icon": "icons/space",
+			"Icon": "icons/list-space",
 			"Tooltip": "Live tile for a Herdr workspace; press to focus it",
 			"Controllers": ["Keypad"],
 			"SupportedInMultiActions": false,
@@ -37,7 +27,7 @@
 		{
 			"Name": "New Herdr Space",
 			"UUID": "com.thomasrooney.herdrdeck.newspace",
-			"Icon": "icons/newspace",
+			"Icon": "icons/list-newspace",
 			"Tooltip": "Create a new Herdr workspace and focus it",
 			"Controllers": ["Keypad"],
 			"SupportedInMultiActions": false,

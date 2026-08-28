@@ -1,0 +1,30 @@
+{
+	"name": "herdr-opendeck",
+	"version": "0.2.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "esbuild src/plugin.ts --bundle --platform=node --target=node24 --format=esm --external:bufferutil --external:utf-8-validate --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=plugin/bin/plugin.mjs",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint --max-warnings 0 src test"
+	},
+	"dependencies": {
+		"@elgato/streamdeck": "^2.1.2"
+	},
+	"devDependencies": {
+		"@elgato/eslint-config": "^0.3.2",
+		"@elgato/prettier-config": "^0.3.3",
+		"@eslint/js": "^9.39.5",
+		"@types/node": "^24.0.0",
+		"esbuild": "^0.25.0",
+		"eslint": "^9.39.5",
+		"eslint-plugin-jsdoc": "^54.7.0",
+		"globals": "^17.11.0",
+		"prettier": "^3.9.6",
+		"typescript": "^5.6.0",
+		"typescript-eslint": "^8.68.0",
+		"vitest": "^3.0.0"
+	},
+	"prettier": "@elgato/prettier-config"
+}

@@ -1,5 +1,7 @@
-herdr-opendeck
+node_modules/
+plugin/bin/
 *.sdPlugin/
 .DS_Store
+logs/
 go.work
 go.work.sum
