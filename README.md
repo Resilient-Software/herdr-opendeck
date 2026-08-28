@@ -23,9 +23,13 @@ target UX.
 sh scripts/install.sh
 ```
 
-builds the plugin for the host platform, installs the `.sdPlugin` bundle into
-OpenDeck's plugins directory, and records the `herdr` CLI path for the plugin
-to use. Restart OpenDeck, then place the "Herdr Space" action on the keys you
+builds the plugin for the host platform (a universal arm64 + x86_64 binary
+on macOS), installs the `.sdPlugin` bundle into OpenDeck's plugins
+directory, and records the `herdr` CLI path for the plugin to use. For the
+official Elgato Stream Deck app, use `sh scripts/install-elgato.sh` instead —
+the same bundle works in both hosts.
+
+Restart OpenDeck, then place the "Herdr Space" action on the keys you
 want to participate — keys without the action are never touched, which is how
 you reserve keys for other uses. With OpenDeck quit,
 `python3 scripts/fill-profile.py` places the action on every empty key of a

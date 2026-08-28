@@ -2,8 +2,8 @@
 package render
 
 import (
+	"encoding/base64"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/ThomasRooney/herdr-opendeck/internal/herdr"
@@ -42,8 +42,10 @@ func truncate(s string, maxChars int) string {
 	return string(runes[:maxChars-1]) + "…"
 }
 
+// Base64 is the one data-URL form both Elgato's setImage contract and stock
+// OpenDeck render reliably.
 func dataURL(svg string) string {
-	return "data:image/svg+xml," + url.PathEscape(svg)
+	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString([]byte(svg))
 }
 
 // The whole key background carries the state: green when the workspace is
