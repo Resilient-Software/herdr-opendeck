@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, so a new herdr release breaking the API surface is caught
+    # without a commit to this repo.
+    - cron: "17 6 * * 1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  herdr-compat:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        herdr: [v0.7.5, v0.8.0, v0.8.2, latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: Download herdr ${{ matrix.herdr }}
+        run: |
+          tag="${{ matrix.herdr }}"
+          if [ "$tag" = "latest" ]; then
+            tag="$(curl -fsSL https://api.github.com/repos/herdrdev/herdr/releases/latest | jq -r .tag_name)"
+          fi
+          echo "resolved herdr tag: $tag"
+          curl -fsSL "https://github.com/herdrdev/herdr/releases/download/$tag/herdr-linux-x86_64" -o /tmp/herdr
+          chmod +x /tmp/herdr
+      - name: Compatibility probe
+        run: sh scripts/compat-check.sh /tmp/herdr

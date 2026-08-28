@@ -15,9 +15,10 @@ target UX.
 
 ## Requirements
 
-- Herdr 0.8+ (the plugin finds the `herdr` CLI via `HERDR_PATH`, the
-  recorded install path, the official install locations, or a running
-  herdr process)
+- Herdr 0.7.5+ — CI runs the compatibility probe (`scripts/compat-check.sh`)
+  against v0.7.5, v0.8.0, v0.8.2, and the latest release weekly. The plugin
+  finds the `herdr` CLI via `HERDR_PATH`, the recorded install path, the
+  official install locations, or a running herdr process
 - Elgato Stream Deck 7.1+, or OpenDeck 2.14+ with Node.js 24+ installed
 - Node.js 24+ and npm to build
 
