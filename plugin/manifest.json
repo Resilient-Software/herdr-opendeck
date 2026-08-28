@@ -4,6 +4,7 @@
 	"Version": "0.1.0",
 	"Icon": "icons/plugin",
 	"Category": "Herdr",
+	"CategoryIcon": "icons/plugin",
 	"SDKVersion": 2,
 	"Software": { "MinimumVersion": "6.0" },
 	"OS": [
