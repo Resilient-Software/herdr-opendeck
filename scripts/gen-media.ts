@@ -93,19 +93,29 @@ const gallery2 = canvas(
 		key(pagerTile(false, 1, 2, true, false), 1430, 360, 320),
 );
 
-const pending = spaceTile(space(5, "api-server", "idle", false), { repo: "backend", branch: "main" }, { footer: "FOCUSING…" });
-const failed = spaceTile(space(5, "api-server", "idle", false), { repo: "backend", branch: "main" }, { footer: "FAILED · TRY AGAIN", footerRed: true });
+const beforeFocus = spaceTile(space(5, "api-server", "idle", false), { repo: "backend", branch: "main" }, {});
+const afterFocus = spaceTile(space(5, "api-server", "idle", true), { repo: "backend", branch: "main" }, {});
 
 const gallery3 = canvas(
-	text("Press to focus, honestly", 960, 150, 72, TEXT, 700) +
-		text("No optimistic state: the key confirms the focus, or says it failed", 960, 220, 40, SUBTEXT, 400) +
-		key(pending, 300, 360, 320) +
-		key(failed, 800, 360, 320) +
-		key(newSpaceTile(false), 1300, 360, 320),
+	text("Press to focus", 960, 150, 72, TEXT, 700) +
+		text("The tile turns green when its workspace has focus", 960, 220, 40, SUBTEXT, 400) +
+		key(beforeFocus, 550, 360, 320) +
+		text("→", 950, 550, 72, SUBTEXT, 700) +
+		key(afterFocus, 1050, 360, 320),
+);
+
+const gallery4 = canvas(
+	text("Watch your agents work", 960, 150, 72, TEXT, 700) +
+		text("Yellow while an agent is busy — glance at the herd without switching windows", 960, 220, 40, SUBTEXT, 400) +
+		key(spaceTile(space(1, "refactor", "working", false), { repo: "webapp", branch: "feat/nav" }, {}), 170, 360, 320) +
+		key(spaceTile(space(2, "tests", "working", false), { repo: "backend", branch: "main" }, {}), 590, 360, 320) +
+		key(spaceTile(space(3, "docs-gen", "working", false), { repo: "handbook", branch: "main" }, {}), 1010, 360, 320) +
+		key(newSpaceTile(false), 1430, 360, 320),
 );
 
 writeFileSync("dist/media/thumbnail.svg", thumbnail);
 writeFileSync("dist/media/gallery-1-status.svg", gallery1);
 writeFileSync("dist/media/gallery-2-pager.svg", gallery2);
 writeFileSync("dist/media/gallery-3-focus.svg", gallery3);
+writeFileSync("dist/media/gallery-4-working.svg", gallery4);
 console.log("wrote dist/media/*.svg");
