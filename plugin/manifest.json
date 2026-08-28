@@ -1,38 +1,58 @@
 {
 	"Name": "Herdr Deck",
+	"Description": "Mirror your Herdr session onto the Stream Deck: live workspace tiles with repository, branch, and agent status. Press a tile to focus that workspace.",
+	"UUID": "com.thomasrooney.herdrdeck",
 	"Author": "Thomas Rooney",
-	"Version": "0.2.0",
+	"Version": "0.2.0.0",
 	"Icon": "icons/plugin",
-	"Category": "Herdr",
+	"Category": "Herdr Deck",
 	"CategoryIcon": "icons/list-space",
 	"SDKVersion": 2,
-	"Software": { "MinimumVersion": "7.1" },
+	"Software": {
+		"MinimumVersion": "7.1"
+	},
 	"OS": [
-		{ "Platform": "mac", "MinimumVersion": "10.15" },
-		{ "Platform": "linux" }
+		{
+			"Platform": "mac",
+			"MinimumVersion": "10.15"
+		}
 	],
 	"CodePath": "bin/plugin.mjs",
-	"Nodejs": { "Version": "24" },
+	"Nodejs": {
+		"Version": "24"
+	},
 	"Actions": [
 		{
 			"Name": "Herdr Space",
 			"UUID": "com.thomasrooney.herdrdeck.space",
 			"Icon": "icons/list-space",
 			"Tooltip": "Live tile for a Herdr workspace; press to focus it",
-			"Controllers": ["Keypad"],
+			"Controllers": [
+				"Keypad"
+			],
 			"SupportedInMultiActions": false,
 			"DisableAutomaticStates": true,
-			"States": [{ "Image": "icons/space" }]
+			"States": [
+				{
+					"Image": "icons/space"
+				}
+			]
 		},
 		{
 			"Name": "New Herdr Space",
 			"UUID": "com.thomasrooney.herdrdeck.newspace",
 			"Icon": "icons/list-newspace",
 			"Tooltip": "Create a new Herdr workspace and focus it",
-			"Controllers": ["Keypad"],
+			"Controllers": [
+				"Keypad"
+			],
 			"SupportedInMultiActions": false,
 			"DisableAutomaticStates": true,
-			"States": [{ "Image": "icons/newspace" }]
+			"States": [
+				{
+					"Image": "icons/newspace"
+				}
+			]
 		}
 	]
 }
