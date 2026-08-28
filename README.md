@@ -25,7 +25,15 @@ sh scripts/install.sh
 
 builds the plugin for the host platform, installs the `.sdPlugin` bundle into
 OpenDeck's plugins directory, and records the `herdr` CLI path for the plugin
-to use. Restart OpenDeck, then place the "Herdr Space" action on a key.
+to use. Restart OpenDeck, then place the "Herdr Space" action on the keys you
+want to participate — keys without the action are never touched, which is how
+you reserve keys for other uses. With OpenDeck quit,
+`python3 scripts/fill-profile.py` places the action on every empty key of a
+profile in one go.
+
+Spaces fill the participating keys in stable slots with live state
+backgrounds. When there are more spaces than keys, the last two keys become
+`←`/`→` pagers with the page count below the arrows.
 
 ## Layout
 

@@ -10,16 +10,18 @@ Do not add pins, per-key assignments, modes, or tab keys in v1.
 
 Stream Deck MK.2 coordinates are zero-based. Slot numbers are row-major.
 
+**Keys are opted in by placing the Herdr Space action on them in OpenDeck.** Any key without the action is never rendered to, bound, or handled — the user reserves keys (for example an fn key mapping at top-right) simply by leaving the action off them. Placement is the configuration; the plugin has no hardcoded reserved slots.
+
+Example placement on an MK.2 with the top-right key reserved:
+
 |      | Col 0 | Col 1 | Col 2 | Col 3 | Col 4 |
 |------|-------|-------|-------|-------|-------|
-| Row 0 | Space | Space | Space | Space | **FN — reserved (slot 4)** |
+| Row 0 | Space | Space | Space | Space | *(no action — user's fn key)* |
 | Row 1 | Space | Space | Space | Space | Space |
-| Row 2 | Space | Space | Space | Space | Space or pager |
+| Row 2 | Space | Space | Space | Space or pager ← | Space or pager → |
 
-The plugin must never render to, bind, or handle events from `(4,0)` / slot `4`. That leaves 14 usable keys.
-
-- Spaces fill keys row-major, ordered by `number`, then `workspace_id`; keep surviving workspace IDs in their existing slots between polls so keys do not shuffle unnecessarily.
-- **The pager is dynamic.** With 14 or fewer spaces there is no pager: every key is a space tile and unused keys are black. With more than 14 spaces, the last key (bottom-right) becomes a pager and the remaining 13 keys page through the spaces.
+- Spaces fill the participating keys row-major, ordered by `number`, then `workspace_id`; keep surviving workspace IDs in their existing slots between polls so keys do not shuffle unnecessarily.
+- **The pager is dynamic and takes two keys.** While spaces fit the participating keys there is no pager: every key is a space tile and unused keys are black. With more spaces than keys, the last two keys become `←` and `→` pagers and the remaining keys page through the spaces.
 - An external focus change reveals the page containing the newly focused workspace.
 
 ## Key image language
@@ -49,26 +51,26 @@ Precedence: focused > blocked > working > plain. Use `#A6ADC8` for metadata text
 
 Working is a static yellow field through stage 3; any motion experiment comes later and must not reduce legibility.
 
-### Pager key (dynamic)
+### Pager keys (dynamic)
 
-The pager exists only while spaces exceed the 14 usable keys. It is a control, not a data tile:
+Pagers exist only while spaces exceed the participating keys. They are controls, not data tiles:
 
-- Centre: `<current>/<total>` page indicator.
-- `TAP →` and `HOLD ←`.
-- If the focused space is off the visible page, show `FOCUS ←` or `FOCUS →`.
-- When the space count drops back to 14 or fewer, the pager disappears and the key returns to being a space tile.
+- Two keys: a large `←` and a large `→` arrow, each with the `<current>/<total>` page indicator below.
+- Press moves one page in that direction; no wrap and no auto-repeat.
+- If the focused space is off the visible page, the arrow pointing toward it is accented.
+- When the space count fits the keys again, both pager keys return to being space tiles.
 
 ## Interaction vocabulary
 
 | Key | Press | Long press |
 |-----|-------|------------|
 | Space | Focus workspace in Herdr **and raise the application hosting the Herdr client** (e.g. the terminal it runs in) | Same as press; no hidden alternate action |
-| Pager (only when present) | Next page | Previous page |
+| Pager `←` / `→` (only when present) | One page in that direction | Same as press |
 | Empty key | No-op | No-op |
-| FN `(4,0)` | Ignored | Ignored |
+| Key without the action | Never touched | Never touched |
 
 - Content keys focus exactly once on key-up. Holding them must not create a second action.
-- Pager key-up before `650 ms` moves one page forward. Crossing `650 ms` moves one page back and suppresses the key-up action. Do not auto-repeat or wrap at either end.
+- Pager keys act once on key-up, one page in their direction. Do not auto-repeat or wrap at either end.
 - Key-down adds immediate pressed feedback. After a focus request, render `FOCUSING…` in the footer until the snapshot confirms it (the background does not turn green until confirmed). On command failure, render `FAILED · TRY AGAIN` in red for one second, then restore live state. Do not use the host's generic alert overlay.
 - Keep gesture state per key context; cancel timers on disappearance or disconnect.
 
@@ -100,13 +102,13 @@ One `Herdr Space` action on any usable key:
 - Render explicit `HERDR OFFLINE` and empty states.
 - Prove connect/register, `willAppear`/`willDisappear`, image updates, and focus on macOS through OpenDeck.
 
-### Stage 2 — live hybrid deck
+### Stage 2 — live deck (built)
 
-Coordinate all 14 usable keys as space tiles: stable ordering, state backgrounds, empty states, and strict slot-4 exclusion. No pager yet; sessions with more than 14 spaces show the first 14.
+Coordinate every participating key as a space tile: stable ordering, state backgrounds, empty states, and opt-in placement only. No pager yet; sessions with more spaces than keys show the first page.
 
-### Stage 3 — paging and hardening
+### Stage 3 — paging and hardening (built)
 
-Enable the dynamic pager (appears only above 14 spaces) with 650 ms long-press timing. Add focus-pending/failure feedback, offline grace and frozen state, redraw deduplication, page clamping, and event/timer tests.
+Enable the dynamic two-key pager (appears only when spaces exceed the keys). Add focus-pending/failure feedback, offline grace and frozen state, redraw deduplication, page clamping, and layout/event tests.
 
 ### Stage 4 — device polish
 
@@ -117,4 +119,4 @@ Calibrate type, colours, brightness, and acknowledgement timing on a physical MK
 - No Stream Deck+ pin model, dial/touch-strip concepts, destructive actions, or question answering.
 - No automatic launching of Herdr.
 - No optimistic focus state; the snapshot is authoritative.
-- No use of the reserved FN key under any circumstance.
+- No touching keys the user has not placed the action on, under any circumstance.
