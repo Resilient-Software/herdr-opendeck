@@ -1,0 +1,5 @@
+herdr-opendeck
+*.sdPlugin/
+.DS_Store
+go.work
+go.work.sum

@@ -1,0 +1,34 @@
+{
+	"Name": "Herdr Deck",
+	"Author": "Thomas Rooney",
+	"Version": "0.1.0",
+	"Icon": "icons/plugin",
+	"Category": "Herdr",
+	"OS": [
+		{ "Platform": "mac", "MinimumVersion": "10.15" },
+		{ "Platform": "linux" },
+		{ "Platform": "windows", "MinimumVersion": "10" }
+	],
+	"CodePaths": {
+		"aarch64-apple-darwin": "aarch64-apple-darwin/bin/herdr-opendeck",
+		"x86_64-apple-darwin": "x86_64-apple-darwin/bin/herdr-opendeck",
+		"x86_64-unknown-linux-gnu": "x86_64-unknown-linux-gnu/bin/herdr-opendeck",
+		"aarch64-unknown-linux-gnu": "aarch64-unknown-linux-gnu/bin/herdr-opendeck",
+		"x86_64-pc-windows-msvc": "x86_64-pc-windows-msvc/bin/herdr-opendeck.exe"
+	},
+	"CodePathMac": "x86_64-apple-darwin/bin/herdr-opendeck",
+	"CodePathLin": "x86_64-unknown-linux-gnu/bin/herdr-opendeck",
+	"CodePathWin": "x86_64-pc-windows-msvc/bin/herdr-opendeck.exe",
+	"Actions": [
+		{
+			"Name": "Herdr Space",
+			"UUID": "com.thomasrooney.herdrdeck.space",
+			"Icon": "icons/space",
+			"Tooltip": "Live tile for a Herdr workspace; press to focus it",
+			"Controllers": ["Keypad"],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [{ "Image": "icons/space" }]
+		}
+	]
+}
