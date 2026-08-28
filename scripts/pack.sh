@@ -10,7 +10,7 @@ cd "$repo"
 npm install --no-audit --no-fund --silent
 npm run --silent build
 
-rm -rf dist
+rm -rf "dist/$uuid.sdPlugin" "dist/$uuid.streamDeckPlugin"
 mkdir -p "dist/$uuid.sdPlugin"
 cp -R plugin/manifest.json plugin/icons plugin/bin "dist/$uuid.sdPlugin/"
 
