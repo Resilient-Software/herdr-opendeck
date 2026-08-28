@@ -4,7 +4,7 @@
 set -eu
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
-uuid="com.thomasrooney.herdrdeck"
+uuid="com.resilientsoftware.herdrdeck"
 
 cd "$repo"
 npm install --no-audit --no-fund --silent

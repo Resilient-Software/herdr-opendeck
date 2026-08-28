@@ -10,7 +10,7 @@ import {
 import type { DeckController } from "./controller";
 
 /** A live tile for one Herdr workspace; press focuses it. */
-@action({ UUID: "com.thomasrooney.herdrdeck.space" })
+@action({ UUID: "com.resilientsoftware.herdrdeck.space" })
 export class SpaceAction extends SingletonAction {
 	constructor(private readonly controller: DeckController) {
 		super();
@@ -30,7 +30,7 @@ export class SpaceAction extends SingletonAction {
 }
 
 /** Creates a Herdr workspace and focuses it. */
-@action({ UUID: "com.thomasrooney.herdrdeck.newspace" })
+@action({ UUID: "com.resilientsoftware.herdrdeck.newspace" })
 export class NewSpaceAction extends SingletonAction {
 	constructor(private readonly controller: DeckController) {
 		super();

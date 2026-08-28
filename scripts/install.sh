@@ -4,7 +4,7 @@
 set -eu
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
-uuid="com.thomasrooney.herdrdeck.sdPlugin"
+uuid="com.resilientsoftware.herdrdeck.sdPlugin"
 
 case "$(uname -s)" in
 	Darwin) plugins_dir="$HOME/Library/Application Support/opendeck/plugins" ;;

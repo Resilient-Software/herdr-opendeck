@@ -1,13 +1,13 @@
 {
 	"Name": "Herdr Deck",
 	"Description": "Mirror your Herdr session onto the Stream Deck: live workspace tiles with repository, branch, and agent status. Press a tile to focus that workspace.",
-	"UUID": "com.thomasrooney.herdrdeck",
+	"UUID": "com.resilientsoftware.herdrdeck",
 	"Author": "Thomas Rooney",
 	"Version": "0.2.0.0",
 	"Icon": "icons/plugin",
 	"Category": "Herdr Deck",
 	"CategoryIcon": "icons/list-space",
-	"SDKVersion": 2,
+	"SDKVersion": 3,
 	"Software": {
 		"MinimumVersion": "7.1"
 	},
@@ -24,7 +24,7 @@
 	"Actions": [
 		{
 			"Name": "Herdr Space",
-			"UUID": "com.thomasrooney.herdrdeck.space",
+			"UUID": "com.resilientsoftware.herdrdeck.space",
 			"Icon": "icons/list-space",
 			"Tooltip": "Live tile for a Herdr workspace; press to focus it",
 			"Controllers": [
@@ -40,7 +40,7 @@
 		},
 		{
 			"Name": "New Herdr Space",
-			"UUID": "com.thomasrooney.herdrdeck.newspace",
+			"UUID": "com.resilientsoftware.herdrdeck.newspace",
 			"Icon": "icons/list-newspace",
 			"Tooltip": "Create a new Herdr workspace and focus it",
 			"Controllers": [

@@ -11,8 +11,8 @@ import json
 import os
 import sys
 
-PLUGIN = "com.thomasrooney.herdrdeck.sdPlugin"
-ACTION = "com.thomasrooney.herdrdeck.space"
+PLUGIN = "com.resilientsoftware.herdrdeck.sdPlugin"
+ACTION = "com.resilientsoftware.herdrdeck.space"
 ICON = f"plugins/{PLUGIN}/icons/space.svg"
 
 STATE = {

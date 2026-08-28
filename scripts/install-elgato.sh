@@ -4,7 +4,7 @@
 set -eu
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
-uuid="com.thomasrooney.herdrdeck.sdPlugin"
+uuid="com.resilientsoftware.herdrdeck.sdPlugin"
 
 [ "$(uname -s)" = "Darwin" ] || { echo "the Elgato Stream Deck app is macOS/Windows only; this script covers macOS" >&2; exit 1; }
 
