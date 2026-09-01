@@ -3,10 +3,13 @@ import streamDeck, { type KeyAction } from "@elgato/streamdeck";
 import { Bridge, gitInfoFor, raiseClient, type Snapshot, workingDir, type Workspace } from "./herdr";
 import { Assignment, clamp, pageCount, pageOf, pagerActive, pageSize, visibleRange } from "./layout";
 import { connectingTile, emptyTile, newSpaceTile, noSpacesTile, offlineTile, pagerTile, spaceTile } from "./render";
+import { Backoff, Coalescer, pollDue, SUBSCRIBE_BACKOFF_CAP_TICKS } from "./schedule";
 
 const OFFLINE_AFTER_FAILURES = 3;
 const FOCUS_PENDING_TIMEOUT_MS = 5000;
 const FOCUS_FAILURE_FLASH_MS = 1000;
+const EVENT_DEBOUNCE_MS = 75;
+const EVENT_MIN_GAP_MS = 300;
 
 type Role = "inert" | "newSpace" | "pagerLeft" | "pagerRight" | "space";
 
@@ -36,12 +39,17 @@ export class DeckController {
 	private pendingFocusWS = "";
 	private pendingSince = 0;
 	private polling = false;
+	private readonly refresh = new Coalescer(EVENT_DEBOUNCE_MS, () => void this.poll(), EVENT_MIN_GAP_MS);
 	private readonly rendered = new Map<string, string>();
+	private readonly resubscribe = new Backoff(SUBSCRIBE_BACKOFF_CAP_TICKS);
 	private readonly roles = new Map<string, Role>();
 	private snapshot: Snapshot | undefined;
+	private subscribed = false;
+	private subscribing = false;
+	private ticksSincePoll = 0;
 
 	constructor() {
-		setInterval(() => void this.poll(), 1000);
+		setInterval(() => this.tick(), 1000);
 	}
 
 	public add(id: string, action: KeyAction, isNewSpace: boolean): void {
@@ -98,6 +106,36 @@ export class DeckController {
 		}
 	}
 
+	/**
+	 * Keeps the event subscription alive; while it is down the 1 Hz tick
+	 * both polls and doubles as the resubscribe retry loop.
+	 */
+	private ensureSubscribed(): void {
+		if (this.subscribed || this.subscribing) {
+			return;
+		}
+		this.subscribing = true;
+		this.bridge
+			.subscribeChanges(
+				() => this.refresh.trigger(),
+				() => {
+					this.subscribed = false;
+				},
+			)
+			.then(
+				() => {
+					this.subscribed = true;
+					this.subscribing = false;
+					this.resubscribe.reset();
+					this.refresh.trigger();
+				},
+				() => {
+					this.subscribing = false;
+					this.resubscribe.failure();
+				},
+			);
+	}
+
 	private async focus(workspaceId: string): Promise<void> {
 		try {
 			await this.bridge.focusWorkspace(workspaceId);
@@ -125,6 +163,7 @@ export class DeckController {
 			return;
 		}
 		this.polling = true;
+		this.ticksSincePoll = 0;
 		try {
 			const snapshot = await this.bridge.snapshot();
 			this.failures = 0;
@@ -267,6 +306,16 @@ export class DeckController {
 		}
 		this.rendered.set(id, image);
 		inst.action.setImage(image).catch(() => this.rendered.delete(id));
+	}
+
+	private tick(): void {
+		if (this.resubscribe.due()) {
+			this.ensureSubscribed();
+		}
+		this.ticksSincePoll++;
+		if (pollDue(this.subscribed, this.ticksSincePoll)) {
+			void this.poll();
+		}
 	}
 }
 

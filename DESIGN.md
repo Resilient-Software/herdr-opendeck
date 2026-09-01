@@ -82,7 +82,8 @@ The New Herdr Space key renders as a green `+` with `NEW SPACE` below; it dims a
 - Without a pager, all 14 keys are space tiles. With a pager, pages contain 13 spaces.
 - A manual page change is view-only and persists until the user focuses an item or Herdr's focused ID changes externally.
 - Additions fill the first free position after existing IDs. Removals compact; clamp the page only when its old index no longer exists.
-- Poll `herdr api snapshot` at about 1 Hz, but redraw only keys whose image model changed.
+- Track the session over the herdr server socket: an `events.subscribe` stream triggers a debounced snapshot refresh (75 ms coalesce, at most one refresh per 300 ms — the server replays an event backlog to fresh subscribers), with a 5 s reconciliation poll while the stream is live. `pane_updated` events that change no deck-visible field (output-revision churn while an agent streams) are dropped before they trigger anything. The snapshot stays authoritative; event payloads are never applied directly.
+- Without the socket (herdr too old, socket moved, subscribe refused), fall back to the previous behaviour: poll the snapshot at 1 Hz via the CLI and retry the subscription with exponential backoff (1 s doubling to a 15 s cap; reset on success). Redraw only keys whose image model changed in either mode.
 - The pager, when present, always occupies the bottom-right key; never reinterpret a space tile as navigation.
 
 ## Empty, loading, and offline states
@@ -112,6 +113,10 @@ Coordinate every participating key as a space tile: stable ordering, state backg
 ### Stage 3 — paging and hardening (built)
 
 Enable the dynamic two-key pager (appears only when spaces exceed the keys). Add focus-pending/failure feedback, offline grace and frozen state, redraw deduplication, page clamping, and layout/event tests.
+
+### Stage 3.5 — socket transport (built)
+
+Replace the 1 Hz CLI poll as the primary update path: talk to the herdr server socket directly (newline-delimited JSON request/response plus a dedicated `events.subscribe` stream), refresh on relevant events, and keep the CLI poll as an automatic fallback for older servers. Focus and create commands go over the socket too, with the same CLI fallback per call.
 
 ### Stage 4 — device polish
 

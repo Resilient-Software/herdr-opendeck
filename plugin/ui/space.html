@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<style>
+			body {
+				margin: 0;
+				padding: 12px 18px;
+				background: transparent;
+				color: #d8d8d8;
+				font-family: -apple-system, "Segoe UI", sans-serif;
+				font-size: 13px;
+				-webkit-user-select: none;
+			}
+			h4 {
+				margin: 0 0 6px;
+				font-size: 13px;
+				color: #b8b8b8;
+			}
+			p {
+				margin: 6px 0 0;
+				color: #969696;
+			}
+			details {
+				margin-top: 14px;
+				border-top: 1px solid #3a3a3a;
+				padding-top: 10px;
+			}
+			summary {
+				cursor: pointer;
+				color: #b8b8b8;
+				font-weight: 600;
+			}
+			summary::marker {
+				color: #969696;
+			}
+			table {
+				margin: 8px 0 2px;
+				border-collapse: collapse;
+				width: 100%;
+			}
+			td {
+				padding: 3px 0;
+				vertical-align: top;
+				color: #969696;
+			}
+			td:first-child {
+				color: #d8d8d8;
+				white-space: nowrap;
+				padding-right: 12px;
+			}
+			.sw {
+				display: inline-block;
+				width: 10px;
+				height: 10px;
+				border-radius: 2px;
+				margin-right: 6px;
+				vertical-align: -1px;
+			}
+		</style>
+	</head>
+	<body>
+		<h4>Herdr Space</h4>
+		<p>
+			A live tile for one Herdr workspace: its number in the corner, its name in the centre, the repository and
+			⎇ branch below. Press to focus that workspace in Herdr and raise the app hosting it. The footer shows
+			FOCUSING… until Herdr confirms, or FAILED · TRY AGAIN briefly on error.
+		</p>
+		<details open>
+			<summary>Key guide</summary>
+			<table>
+				<tr>
+					<td><span class="sw" style="background: #a6e3a1"></span>Green</td>
+					<td>Focused workspace.</td>
+				</tr>
+				<tr>
+					<td><span class="sw" style="background: #f9e2af"></span>Yellow</td>
+					<td>An agent is working.</td>
+				</tr>
+				<tr>
+					<td><span class="sw" style="background: #f38ba8"></span>Red</td>
+					<td>An agent is blocked and needs your input.</td>
+				</tr>
+				<tr>
+					<td><span class="sw" style="background: #45475a"></span>Plain</td>
+					<td>Idle / done; the footer word carries the state.</td>
+				</tr>
+			</table>
+			<p>
+				Placement is the configuration: workspaces fill every key carrying this action, row-major, in Herdr's
+				order. Leave the action off a key to reserve that key for something else.
+			</p>
+			<p>
+				With more workspaces than keys, the last two keys become ← and → pagers with a page indicator; the
+				arrow pointing toward the focused workspace is accented. When everything fits again they return to
+				being space tiles.
+			</p>
+			<p>
+				If Herdr is unreachable the deck shows HERDR OFFLINE, dims the last-known tiles, and goes inert until
+				the next good snapshot.
+			</p>
+		</details>
+		<p>This key has no settings.</p>
+		<script>
+			function connectElgatoStreamDeckSocket(port, propertyInspectorUUID, registerEvent) {
+				const websocket = new WebSocket("ws://127.0.0.1:" + port);
+				websocket.onopen = () => {
+					websocket.send(JSON.stringify({ event: registerEvent, uuid: propertyInspectorUUID }));
+				};
+			}
+		</script>
+	</body>
+</html>

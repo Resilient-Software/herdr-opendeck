@@ -5,6 +5,7 @@
  * which boots an isolated session first.
  */
 import { Bridge, type Snapshot, workingDir } from "../src/herdr";
+import { defaultSocketPath, SocketClient } from "../src/socket";
 
 function fail(violation: string): never {
 	console.error(`COMPAT FAIL: ${violation}`);
@@ -38,6 +39,28 @@ function assertSnapshotShape(snapshot: Snapshot): void {
 
 const bridge = new Bridge();
 
+// Whether this server speaks the socket API at all decides what "COMPAT OK"
+// must mean: with a live socket, the CLI silently covering for it would hide
+// a socket regression, so CLI use becomes a failure.
+const socketAlive = await new SocketClient(defaultSocketPath())
+	.request("ping", {})
+	.then(() => true)
+	.catch(() => false);
+
+let changeEvents = 0;
+const subscribed = await bridge
+	.subscribeChanges(
+		() => changeEvents++,
+		() => {},
+	)
+	.then(() => true)
+	.catch((err: unknown) => {
+		if (socketAlive) {
+			fail(`events.subscribe refused by a socket-capable server: ${err}`);
+		}
+		return false;
+	});
+
 const before = await bridge.snapshot().catch((err: unknown) => fail(`api snapshot: ${err}`));
 assertSnapshotShape(before);
 
@@ -65,7 +88,23 @@ for (const space of focused.workspaces) {
 	}
 }
 
+if (subscribed) {
+	const deadline = Date.now() + 5000;
+	while (changeEvents === 0 && Date.now() < deadline) {
+		await new Promise((resolve) => setTimeout(resolve, 100));
+	}
+	if (changeEvents === 0) {
+		fail("no change events arrived after workspace create/focus");
+	}
+}
+if (socketAlive && bridge.transport.cli > 0) {
+	fail(`CLI served ${bridge.transport.cli} call(s) despite a live socket — socket transport regression`);
+}
+
 console.log(
 	`COMPAT OK: ${focused.workspaces.length} workspaces, ${focused.panes.length} panes, ` +
-		`statuses [${[...new Set(focused.workspaces.map((space) => space.agent_status))].join(", ")}]`,
+		`statuses [${[...new Set(focused.workspaces.map((space) => space.agent_status))].join(", ")}], ` +
+		`transport socket=${bridge.transport.socket} cli=${bridge.transport.cli}, ` +
+		`events=${subscribed ? changeEvents : "unsupported"}`,
 );
+process.exit(0);

@@ -8,6 +8,8 @@ import { dirname, join, basename as pathBasename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
+import { defaultSocketPath, SocketClient, type SubscriptionEvent } from "./socket";
+
 const execFileAsync = promisify(execFile);
 
 const RUN_TIMEOUT_MS = 2500;
@@ -121,19 +123,98 @@ export async function resolveBinary(): Promise<string> {
 	return "herdr";
 }
 
+/**
+ * Session changes that can alter what the deck shows: the workspace set,
+ * names, focus, and every pane change (pane.updated carries agent status
+ * flips). The event payloads are not applied directly — any of these just
+ * triggers a snapshot refresh, keeping the snapshot authoritative.
+ */
+const CHANGE_SUBSCRIPTIONS = [
+	"workspace.created",
+	"workspace.updated",
+	"workspace.renamed",
+	"workspace.moved",
+	"workspace.reordered",
+	"workspace.closed",
+	"workspace.focused",
+	"pane.created",
+	"pane.closed",
+	"pane.updated",
+	"pane.exited",
+	"pane.agent_detected",
+].map((type) => ({ type }));
+
+/**
+ * Reads the subscription types a server offers out of its unknown-variant
+ * rejection ("unknown variant `x`, expected one of `a`, `b`, ...") and
+ * intersects them with the ones the deck wants.
+ */
+function supportedSubset(message: string): { type: string }[] {
+	const listed = /expected one of (.+)/.exec(message);
+	if (!listed) {
+		return [];
+	}
+	const offered = new Set([...listed[1].matchAll(/`([^`]+)`/g)].map((match) => match[1]));
+	return CHANGE_SUBSCRIPTIONS.filter((subscription) => offered.has(subscription.type));
+}
+
+function isPaneChurn(event: SubscriptionEvent, seen: Map<string, string>): boolean {
+	if (event.event !== "pane_updated") {
+		return false;
+	}
+	const pane = (event.data as { pane?: Pane } | undefined)?.pane;
+	if (!pane) {
+		return false;
+	}
+	const signature = JSON.stringify([pane.agent_status, pane.cwd, pane.focused, pane.workspace_id]);
+	if (seen.get(pane.pane_id) === signature) {
+		return true;
+	}
+	seen.set(pane.pane_id, signature);
+	return false;
+}
+
 export class Bridge {
+	/** Successful calls served per transport; compat-check asserts on it. */
+	public readonly transport = { socket: 0, cli: 0 };
 	private binary = "";
 	private failuresSinceResolve = 0;
+	private readonly socket: SocketClient;
+
+	constructor(opts?: { socketPath?: string; timeoutMs?: number }) {
+		this.socket = new SocketClient(opts?.socketPath ?? defaultSocketPath(), { timeoutMs: opts?.timeoutMs });
+	}
 
 	public async createWorkspace(): Promise<void> {
-		await this.run("workspace", "create", "--focus");
+		try {
+			await this.socket.request("workspace.create", { focus: true });
+			this.transport.socket++;
+		} catch {
+			await this.run("workspace", "create", "--focus");
+			this.transport.cli++;
+		}
 	}
 
 	public async focusWorkspace(workspaceId: string): Promise<void> {
-		await this.run("workspace", "focus", workspaceId);
+		try {
+			await this.socket.request("workspace.focus", { workspace_id: workspaceId });
+			this.transport.socket++;
+		} catch {
+			await this.run("workspace", "focus", workspaceId);
+			this.transport.cli++;
+		}
 	}
 
 	public async snapshot(): Promise<Snapshot> {
+		try {
+			const result = (await this.socket.request("session.snapshot", {})) as { snapshot?: Snapshot };
+			if (result?.snapshot) {
+				this.transport.socket++;
+				return result.snapshot;
+			}
+		} catch {
+			// Socket unavailable (old herdr, moved socket): use the CLI.
+		}
 		let out: string;
 		try {
 			out = await this.run("api", "snapshot");
@@ -151,10 +232,12 @@ export class Bridge {
 			result?: Partial<Snapshot> & { snapshot?: Snapshot };
 		};
 		if (envelope.result?.snapshot) {
+			this.transport.cli++;
 			return envelope.result.snapshot;
 		}
 		// Some builds place the snapshot fields directly under result.
 		if (envelope.result?.panes) {
+			this.transport.cli++;
 			return {
 				focused_pane_id: envelope.result.focused_pane_id ?? "",
 				panes: envelope.result.panes,
@@ -162,6 +245,37 @@ export class Bridge {
 			};
 		}
 		throw new Error("no snapshot in herdr api response");
+	}
+
+	/**
+	 * Streams change notifications from the server. Resolves once subscribed;
+	 * rejects when the socket API is unavailable, in which case the caller
+	 * stays on polling alone. pane_updated fires on every output revision
+	 * while an agent streams, so those are dropped unless a field the deck
+	 * actually renders from panes has changed.
+	 *
+	 * Servers reject the whole subscription when any type is unknown to them
+	 * (herdr 0.7.5 lacks workspace.reordered), naming the variants they do
+	 * accept; one retry with that intersection keeps the event stream on
+	 * both older and newer servers. Anything the subset misses is covered by
+	 * the reconciliation poll.
+	 */
+	public async subscribeChanges(onChange: () => void, onClose: () => void): Promise<void> {
+		const seen = new Map<string, string>();
+		const handler = (event: SubscriptionEvent) => {
+			if (!isPaneChurn(event, seen)) {
+				onChange();
+			}
+		};
+		try {
+			return await this.socket.subscribe(CHANGE_SUBSCRIPTIONS, handler, onClose);
+		} catch (err) {
+			const subset = supportedSubset(err instanceof Error ? err.message : String(err));
+			if (subset.length === 0 || subset.length === CHANGE_SUBSCRIPTIONS.length) {
+				throw err;
+			}
+			return await this.socket.subscribe(subset, handler, onClose);
+		}
 	}
 
 	private async run(...args: string[]): Promise<string> {

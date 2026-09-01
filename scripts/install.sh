@@ -16,7 +16,7 @@ esac
 
 target="$plugins_dir/$uuid"
 mkdir -p "$target"
-cp -R "$repo/plugin/manifest.json" "$repo/plugin/icons" "$repo/plugin/bin" "$target/"
+cp -R "$repo/plugin/manifest.json" "$repo/plugin/icons" "$repo/plugin/bin" "$repo/plugin/ui" "$target/"
 
 # Record where herdr lives, since the host may run with a minimal PATH; the
 # plugin also probes the official install locations and ps on its own.
