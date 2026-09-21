@@ -1,8 +1,8 @@
-id = "com.thomasrooney.herdr-opendeck"
-name = "Herdr OpenDeck"
-version = "0.1.0"
+id = "com.resilientsoftware.herdrdeck"
+name = "Herdr Deck"
+version = "0.2.0"
 min_herdr_version = "0.8.0"
-description = "Mirror the Herdr session onto a Stream Deck via OpenDeck."
+description = "Mirror Herdr workspaces onto a Stream Deck: live tiles with repository, branch and agent status."
 platforms = ["macos", "linux"]
 
 [[build]]

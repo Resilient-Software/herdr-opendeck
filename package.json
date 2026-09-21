@@ -1,6 +1,10 @@
 {
 	"name": "herdr-opendeck",
 	"version": "0.2.0",
+	"description": "Mirror Herdr workspaces onto a Stream Deck",
+	"license": "Apache-2.0",
+	"repository": "github:Resilient-Software/herdr-opendeck",
+	"homepage": "https://deck.resilientsoftware.co.uk/",
 	"private": true,
 	"type": "module",
 	"scripts": {
