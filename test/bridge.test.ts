@@ -160,6 +160,38 @@ describe("Bridge over the socket", () => {
 		expect(changes).toBe(3);
 	});
 
+	test("subscribeChanges passes agent activity token changes through the churn filter", async () => {
+		const pane = (revision: number, summary: string | null) => ({
+			pane: {
+				pane_id: "w1:p1",
+				agent: "claude",
+				agent_status: "idle",
+				focused: false,
+				cwd: "/repo",
+				workspace_id: "w1",
+				revision,
+				tokens: summary ? { rsact_v: "1", rsact_state: "background", rsact_summary: summary } : {},
+			},
+		});
+		const server = startServer((req, socket) => {
+			socket.write(JSON.stringify({ id: req.id, result: { type: "subscription_started" } }) + "\n");
+			const updates = [pane(1, null), pane(2, "1 bg"), pane(3, "1 bg"), pane(4, null)];
+			for (const [i, data] of updates.entries()) {
+				socket.write(JSON.stringify({ event: "pane_updated", data, seq: i }) + "\n");
+			}
+			socket.end();
+		});
+		const bridge = new Bridge({ socketPath: server.path, timeoutMs: 250 });
+		let changes = 0;
+		let closed: () => void = () => {};
+		const closedP = new Promise<void>((resolve) => (closed = resolve));
+		await bridge.subscribeChanges(() => changes++, closed);
+		await closedP;
+		// First sighting, activity appearing, and activity clearing fire; the
+		// repeat of "1 bg" is churn.
+		expect(changes).toBe(3);
+	});
+
 	test("subscribeChanges retries with the server's supported subset (herdr 0.7.5)", async () => {
 		const subCounts: number[] = [];
 		const server = startServer((req, socket) => {

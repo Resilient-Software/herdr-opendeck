@@ -45,9 +45,20 @@ Author each key at `144 × 144`, system sans text, flat geometry, no gradients, 
 | focused / selected | green `#A6E3A1` | dark `#1E1E2E` |
 | `working` | yellow `#F9E2AF` | dark `#1E1E2E` |
 | `blocked` (needs input) | red `#F38BA8` | dark `#1E1E2E` |
+| idle, but subagents or background tasks still running (activity) | blue `#89B4FA` | dark `#1E1E2E`, footer names the work (`2 SUB · 1 BG`) |
 | `idle` / `done` / `unknown` — neither working nor focused | plain `#1E1E2E` | light `#CDD6F4`, footer carries the word |
+| … with a scheduled check (activity) | plain `#1E1E2E` | footer in mauve `#CBA6F7` counts down (`LOOP IN 4M`) |
 
-Precedence: focused > blocked > working > plain. Use `#A6ADC8` for metadata text on plain tiles. Workspace keys use Herdr's aggregate `agent_status`; do not recompute it in the plugin.
+Precedence: focused > blocked > working > background activity > plain. Use `#A6ADC8` for metadata text on plain tiles. Workspace keys use Herdr's aggregate `agent_status`; do not recompute it in the plugin.
+
+### Agent activity (optional)
+
+When the [herdr-agent-activity](https://github.com/Resilient-Software/herdr-agent-activity) plugin is installed, each workspace carries `rsact_*` metadata tokens (its [contract](https://github.com/Resilient-Software/herdr-agent-activity/blob/main/CONTRACT.md)) summing the subagents, background shells, monitors and scheduled checks of its agents. The deck reads them from the same snapshot and only ever *refines* Herdr's state:
+
+- It never overrides focused, blocked or working; on those tiles the activity appears in the footer only.
+- An idle workspace whose agents still have subagents or background tasks running is not finished, so it gets its own blue field.
+- A scheduled check alone keeps the tile plain and puts a mauve countdown in the footer; the countdown is computed locally from `rsact_next_at` and repainted every 15 s.
+- **Fail open:** without the plugin, or with a token contract version the deck does not know, tiles render exactly as described above.
 
 Working is a static yellow field through stage 3; any motion experiment comes later and must not reduce legibility.
 
