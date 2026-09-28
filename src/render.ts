@@ -2,6 +2,7 @@
  * SVG key images for Herdr space tiles. Palette is Catppuccin Mocha,
  * matching Herdr's default theme family.
  */
+import { activityFooter, parseActivity } from "./activity";
 import type { GitInfo, Workspace } from "./herdr";
 
 const COL_BG = "#1e1e2e";
@@ -11,12 +12,18 @@ const COL_SUBTEXT = "#a6adc8";
 const COL_RED = "#f38ba8";
 const COL_YELLOW = "#f9e2af";
 const COL_GREEN = "#a6e3a1";
+const COL_BLUE = "#89b4fa";
+const COL_MAUVE = "#cba6f7";
+/** Near-black mauve: waiting on a timer, calmer than the "busy" fields. */
+const COL_MAUVE_DARK = "#362a52";
 const COL_OVERLAY = "#6c7086";
 
 export type TileOpts = {
 	dim?: boolean;
 	footer?: string;
 	footerRed?: boolean;
+	/** Clock for activity countdowns; defaults to Date.now(). */
+	now?: number;
 };
 
 /**
@@ -41,9 +48,14 @@ function truncate(s: string, maxChars: number): string {
 
 /**
  * The whole key background carries the state: green when the workspace is
- * focused, yellow when an agent is working, red when an agent is blocked,
- * plain otherwise, with the lifecycle word in the footer when the
- * background is plain. Text mirrors how Herdr names the workspace, plus
+ * focused, red when an agent is blocked, yellow when an agent is working,
+ * blue when agents are idle but subagents or background tasks are still
+ * running, near-black mauve with a mauve countdown when their only
+ * activity is a scheduled check (both from
+ * the optional herdr-agent-activity tokens), plain otherwise.
+ * The footer names the state whenever colour alone would carry it: the
+ * lifecycle word on plain tiles, the activity ("2 SUB · 1 BG", "LOOP IN 4M")
+ * whenever there is some. Text mirrors how Herdr names the workspace, plus
  * where it is operating: repository and branch.
  */
 export function spaceTile(space: Workspace, info: GitInfo, opt: TileOpts): string {
@@ -51,6 +63,7 @@ export function spaceTile(space: Workspace, info: GitInfo, opt: TileOpts): strin
 	let foreground = COL_TEXT;
 	let sub = COL_SUBTEXT;
 	let plain = true;
+	const activity = parseActivity(space.tokens);
 	if (!opt.dim) {
 		if (space.focused) {
 			[background, foreground, sub, plain] = [COL_GREEN, COL_BG, COL_SURFACE, false];
@@ -58,14 +71,25 @@ export function spaceTile(space: Workspace, info: GitInfo, opt: TileOpts): strin
 			[background, foreground, sub, plain] = [COL_RED, COL_BG, COL_SURFACE, false];
 		} else if (space.agent_status === "working") {
 			[background, foreground, sub, plain] = [COL_YELLOW, COL_BG, COL_SURFACE, false];
+		} else if (activity?.state === "scheduled") {
+			[background, plain] = [COL_MAUVE_DARK, false];
+		} else if (activity) {
+			[background, foreground, sub, plain] = [COL_BLUE, COL_BG, COL_SURFACE, false];
 		}
 	}
 	const label = space.label || `Space ${space.number}`;
 	let footer = opt.footer ?? "";
+	let footerTint = "";
+	if (!footer && !opt.dim && activity) {
+		footer = activityFooter(activity, opt.now ?? Date.now());
+		if (background === COL_MAUVE_DARK) {
+			footerTint = COL_MAUVE;
+		}
+	}
 	if (!footer && plain && !opt.dim) {
 		footer = (space.agent_status || "unknown").toUpperCase();
 	}
-	const footerColor = opt.footerRed ? COL_RED : sub;
+	const footerColor = opt.footerRed ? COL_RED : footerTint || sub;
 
 	let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">`;
 	if (background !== COL_BG) {

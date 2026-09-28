@@ -2,10 +2,12 @@ import streamDeck, { type KeyAction } from "@elgato/streamdeck";
 
 import { Bridge, gitInfoFor, raiseClient, type Snapshot, workingDir, type Workspace } from "./herdr";
 import { Assignment, clamp, pageCount, pageOf, pagerActive, pageSize, visibleRange } from "./layout";
+import { parseActivity } from "./activity";
 import { connectingTile, emptyTile, newSpaceTile, noSpacesTile, offlineTile, pagerTile, spaceTile } from "./render";
 import { Backoff, Coalescer, pollDue, SUBSCRIBE_BACKOFF_CAP_TICKS } from "./schedule";
 
 const OFFLINE_AFTER_FAILURES = 3;
+const COUNTDOWN_REFRESH_TICKS = 15;
 const FOCUS_PENDING_TIMEOUT_MS = 5000;
 const FOCUS_FAILURE_FLASH_MS = 1000;
 const EVENT_DEBOUNCE_MS = 75;
@@ -46,6 +48,7 @@ export class DeckController {
 	private snapshot: Snapshot | undefined;
 	private subscribed = false;
 	private subscribing = false;
+	private ticks = 0;
 	private ticksSincePoll = 0;
 
 	constructor() {
@@ -152,6 +155,10 @@ export class DeckController {
 
 	private focusedWorkspaceId(): string {
 		return this.snapshot?.workspaces.find((space) => space.focused)?.workspace_id ?? "";
+	}
+
+	private hasCountdown(): boolean {
+		return Boolean(this.snapshot?.workspaces.some((space) => parseActivity(space.tokens)?.nextAt));
 	}
 
 	private orderedInstances(): [string, Instance][] {
@@ -316,7 +323,15 @@ export class DeckController {
 		if (pollDue(this.subscribed, this.ticksSincePoll)) {
 			void this.poll();
 		}
+		// Activity countdowns ("LOOP IN 4M") age without any herdr event;
+		// repaint periodically while one is on screen. Unchanged keys are
+		// deduplicated by setImage.
+		this.ticks++;
+		if (this.ticks % COUNTDOWN_REFRESH_TICKS === 0 && this.hasCountdown()) {
+			this.render();
+		}
 	}
+
 }
 
 function sortedSpaces(snapshot: Snapshot): Workspace[] {

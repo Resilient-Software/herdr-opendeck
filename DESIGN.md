@@ -45,9 +45,20 @@ Author each key at `144 × 144`, system sans text, flat geometry, no gradients, 
 | focused / selected | green `#A6E3A1` | dark `#1E1E2E` |
 | `working` | yellow `#F9E2AF` | dark `#1E1E2E` |
 | `blocked` (needs input) | red `#F38BA8` | dark `#1E1E2E` |
+| idle, but subagents or background tasks still running (activity) | blue `#89B4FA` | dark `#1E1E2E`, footer names the work (`2 SUB · 1 BG`) |
 | `idle` / `done` / `unknown` — neither working nor focused | plain `#1E1E2E` | light `#CDD6F4`, footer carries the word |
+| idle, only a scheduled check pending (activity) | near-black mauve `#362A52` | light `#CDD6F4`, footer counts down in mauve `#CBA6F7` (`LOOP IN 17M`) |
 
-Precedence: focused > blocked > working > plain. Use `#A6ADC8` for metadata text on plain tiles. Workspace keys use Herdr's aggregate `agent_status`; do not recompute it in the plugin.
+Precedence: focused > blocked > working > background activity > scheduled check > plain. Use `#A6ADC8` for metadata text on plain tiles. Workspace keys use Herdr's aggregate `agent_status`; do not recompute it in the plugin.
+
+### Agent activity (optional)
+
+When the [herdr-agent-activity](https://github.com/Resilient-Software/herdr-agent-activity) plugin is installed, each workspace carries `rsact_*` metadata tokens (its [contract](https://github.com/Resilient-Software/herdr-agent-activity/blob/main/CONTRACT.md)) summing the subagents, background shells, monitors and scheduled checks of its agents. The deck reads them from the same snapshot and only ever *refines* Herdr's state:
+
+- It never overrides focused, blocked or working; on those tiles the activity appears in the footer only.
+- An idle workspace whose agents still have subagents or background tasks running is not finished, so it gets its own blue field.
+- An idle workspace whose only activity is a scheduled check is waiting on a timer, not finished, so it gets a near-black mauve field with a mauve countdown footer; the countdown is computed locally from `rsact_next_at` and repainted every 15 s.
+- **Fail open:** without the plugin, or with a token contract version the deck does not know, tiles render exactly as described above.
 
 Working is a static yellow field through stage 3; any motion experiment comes later and must not reduce legibility.
 

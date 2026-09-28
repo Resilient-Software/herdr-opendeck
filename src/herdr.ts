@@ -8,6 +8,7 @@ import { dirname, join, basename as pathBasename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
+import type { Tokens } from "./activity";
 import { defaultSocketPath, SocketClient, type SubscriptionEvent } from "./socket";
 
 const execFileAsync = promisify(execFile);
@@ -25,6 +26,8 @@ export type Pane = {
 	terminal_title_stripped: string;
 	cwd: string;
 	workspace_id: string;
+	/** Metadata tokens; herdr-agent-activity publishes rsact_* here. */
+	tokens?: Tokens;
 };
 
 export type Worktree = {
@@ -41,6 +44,8 @@ export type Workspace = {
 	tab_count: number;
 	focused: boolean;
 	worktree: Worktree | null;
+	/** Metadata tokens; herdr-agent-activity publishes rsact_* rollups here. */
+	tokens?: Tokens;
 };
 
 export type Snapshot = {
@@ -166,7 +171,13 @@ function isPaneChurn(event: SubscriptionEvent, seen: Map<string, string>): boole
 	if (!pane) {
 		return false;
 	}
-	const signature = JSON.stringify([pane.agent_status, pane.cwd, pane.focused, pane.workspace_id]);
+	const signature = JSON.stringify([
+		pane.agent_status,
+		pane.cwd,
+		pane.focused,
+		pane.workspace_id,
+		pane.tokens?.rsact_summary ?? null,
+	]);
 	if (seen.get(pane.pane_id) === signature) {
 		return true;
 	}
