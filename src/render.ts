@@ -14,6 +14,8 @@ const COL_YELLOW = "#f9e2af";
 const COL_GREEN = "#a6e3a1";
 const COL_BLUE = "#89b4fa";
 const COL_MAUVE = "#cba6f7";
+/** Near-black mauve: waiting on a timer, calmer than the "busy" fields. */
+const COL_MAUVE_DARK = "#362a52";
 const COL_OVERLAY = "#6c7086";
 
 export type TileOpts = {
@@ -48,7 +50,8 @@ function truncate(s: string, maxChars: number): string {
  * The whole key background carries the state: green when the workspace is
  * focused, red when an agent is blocked, yellow when an agent is working,
  * blue when agents are idle but subagents or background tasks are still
- * running, mauve when their only activity is a scheduled check (both from
+ * running, near-black mauve with a mauve countdown when their only
+ * activity is a scheduled check (both from
  * the optional herdr-agent-activity tokens), plain otherwise.
  * The footer names the state whenever colour alone would carry it: the
  * lifecycle word on plain tiles, the activity ("2 SUB · 1 BG", "LOOP IN 4M")
@@ -69,20 +72,24 @@ export function spaceTile(space: Workspace, info: GitInfo, opt: TileOpts): strin
 		} else if (space.agent_status === "working") {
 			[background, foreground, sub, plain] = [COL_YELLOW, COL_BG, COL_SURFACE, false];
 		} else if (activity?.state === "scheduled") {
-			[background, foreground, sub, plain] = [COL_MAUVE, COL_BG, COL_SURFACE, false];
+			[background, plain] = [COL_MAUVE_DARK, false];
 		} else if (activity) {
 			[background, foreground, sub, plain] = [COL_BLUE, COL_BG, COL_SURFACE, false];
 		}
 	}
 	const label = space.label || `Space ${space.number}`;
 	let footer = opt.footer ?? "";
+	let footerTint = "";
 	if (!footer && !opt.dim && activity) {
 		footer = activityFooter(activity, opt.now ?? Date.now());
+		if (background === COL_MAUVE_DARK) {
+			footerTint = COL_MAUVE;
+		}
 	}
 	if (!footer && plain && !opt.dim) {
 		footer = (space.agent_status || "unknown").toUpperCase();
 	}
-	const footerColor = opt.footerRed ? COL_RED : sub;
+	const footerColor = opt.footerRed ? COL_RED : footerTint || sub;
 
 	let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">`;
 	if (background !== COL_BG) {

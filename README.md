@@ -15,8 +15,8 @@ Keys become live tiles for Herdr workspaces: label, repository, branch, and a
 background colour carrying state (green focused, yellow working, red blocked).
 With the optional [herdr-agent-activity](https://github.com/Resilient-Software/herdr-agent-activity)
 plugin installed, keys also show agents that look idle but are still busy:
-blue with `2 SUB · 1 BG` while subagents or background tasks run, and mauve
-with a countdown such as `LOOP IN 17M` for scheduled checks.
+blue with `2 SUB · 1 BG` while subagents or background tasks run, and a dark
+mauve tile with a countdown such as `LOOP IN 17M` for scheduled checks.
 Pressing a tile focuses that workspace in Herdr and raises the hosting
 terminal application. Updates stream from the herdr server socket
 (`events.subscribe`), so state changes land in well under a second; when the

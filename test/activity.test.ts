@@ -85,10 +85,10 @@ describe("spaceTile with activity", () => {
 		expect(footer(image)).toBe("#313244 2 SUB · 1 BG");
 	});
 
-	test("scheduled checks light mauve with a countdown", () => {
+	test("scheduled checks get a near-black mauve field with a mauve countdown", () => {
 		const image = spaceTile(space({ agent_status: "done", tokens: LOOP }), INFO, { now: NOW });
-		expect(background(image)).toBe("#cba6f7");
-		expect(footer(image)).toBe("#313244 LOOP IN 4M");
+		expect(background(image)).toBe("#362a52");
+		expect(footer(image)).toBe("#cba6f7 LOOP IN 4M");
 	});
 
 	test("herdr's own state keeps precedence: blocked, working and focus are never hidden", () => {
