@@ -57,9 +57,22 @@
 				margin-right: 6px;
 				vertical-align: -1px;
 			}
+			.g {
+				width: 13px;
+				height: 13px;
+				fill: #d8d8d8;
+				vertical-align: -2px;
+			}
 		</style>
 	</head>
 	<body>
+		<svg width="0" height="0" style="position: absolute">
+			<symbol id="g-subagents" viewBox="0 0 24 24"><circle cx="12" cy="2.7" r="2.5"/><rect x="10.5" y="3" width="3" height="4"/><path fill-rule="evenodd" d="M6.5 6.5h11a4.5 4.5 0 0 1 4.5 4.5v7a4.5 4.5 0 0 1-4.5 4.5h-11a4.5 4.5 0 0 1-4.5-4.5v-7a4.5 4.5 0 0 1 4.5-4.5zM5.4 14a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0zM13.4 14a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0-5.2 0z"/></symbol>
+			<symbol id="g-shell" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4 3h16a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-16a3 3 0 0 1-3-3v-12a3 3 0 0 1 3-3zM4.4 8.6l2.3-2.3l5.7 5.7l-5.7 5.7l-2.3-2.3l3.4-3.4zM13.2 14.8h6.2v3.2h-6.2z"/></symbol>
+			<symbol id="g-monitor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M0.5 12C3.8 1.3 20.2 1.3 23.5 12C20.2 22.7 3.8 22.7 0.5 12zM4.2 12C7 5.6 17 5.6 19.8 12C17 18.4 7 18.4 4.2 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+			<symbol id="g-loop" viewBox="0 0 24 24"><path d="M14.8 5.4A7.6 7.6 0 1 1 5 9.6" fill="none" stroke="#d8d8d8" stroke-width="3.4" stroke-linecap="round"/><path d="M7 4.5L9 12.5L0.1 8.9z"/></symbol>
+			<symbol id="g-clock" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M0.8 12a11.2 11.2 0 1 0 22.4 0a11.2 11.2 0 1 0-22.4 0zM4.1 12a7.9 7.9 0 1 0 15.8 0a7.9 7.9 0 1 0-15.8 0z"/><path d="M12 7.6V12.4H15.8" fill="none" stroke="#d8d8d8" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+		</svg>
 		<h4>Herdr Space</h4>
 		<p>
 			A live tile for one Herdr workspace: its number in the corner, its name in the centre, the repository and
@@ -82,10 +95,28 @@
 					<td>An agent is blocked and needs your input.</td>
 				</tr>
 				<tr>
+					<td><span class="sw" style="background: #89b4fa"></span>Blue</td>
+					<td>
+						Idle, but work goes on in the background: <svg class="g"><use href="#g-subagents" /></svg> subagents,
+						<svg class="g"><use href="#g-shell" /></svg> background shells,
+						<svg class="g"><use href="#g-monitor" /></svg> monitors, each with a count.
+					</td>
+				</tr>
+				<tr>
+					<td><span class="sw" style="background: #362a52; box-shadow: inset 0 0 0 1px #cba6f7"></span>Mauve</td>
+					<td>
+						Idle, waiting on a scheduled check: <svg class="g"><use href="#g-loop" /></svg> a loop or
+						<svg class="g"><use href="#g-clock" /></svg> a one-off, with a countdown.
+					</td>
+				</tr>
+				<tr>
 					<td><span class="sw" style="background: #45475a"></span>Plain</td>
 					<td>Idle / done; the footer word carries the state.</td>
 				</tr>
 			</table>
+			<p>
+				Blue and mauve need the herdr-agent-activity plugin for Herdr. Without it those workspaces stay plain.
+			</p>
 			<p>
 				Placement is the configuration: workspaces fill every key carrying this action, row-major, in Herdr's
 				order. Leave the action off a key to reserve that key for something else.

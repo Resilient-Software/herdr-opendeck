@@ -1,6 +1,6 @@
 {
 	"Name": "Herdr Deck",
-	"Description": "Mirror your Herdr session onto the Stream Deck: live workspace tiles with repository, branch, and agent status. Press a tile to focus that workspace. Works with every agent Herdr runs \u2014 Claude Code, Codex, Pi, opencode, Cursor, Grok, Copilot, Hermes, and more (21 detected out of the box).",
+	"Description": "Idle isn't always done: Herdr Deck turns your Herdr workspaces into live Stream Deck keys that show which coding agents are blocked, working, still busy with subagents or background tasks, or waiting on a scheduled loop, and adds keys that send commands, text and key presses to them.",
 	"UUID": "com.resilientsoftware.herdrdeck",
 	"Author": "Thomas Rooney",
 	"Version": "1.0.0.0",
@@ -9,7 +9,7 @@
 	"CategoryIcon": "icons/list-space",
 	"SDKVersion": 3,
 	"Software": {
-		"MinimumVersion": "7.1"
+		"MinimumVersion": "7.6"
 	},
 	"OS": [
 		{
@@ -26,7 +26,7 @@
 			"Name": "Herdr Space",
 			"UUID": "com.resilientsoftware.herdrdeck.space",
 			"Icon": "icons/list-space",
-			"Tooltip": "Live tile for a Herdr workspace; press to focus it. Green focused, yellow working, red needs input. Extra workspaces page via arrow keys.",
+			"Tooltip": "Live tile for a Herdr workspace; press to focus it. Green focused, yellow working, red blocked, blue busy in the background, mauve waiting on a timer. Extra workspaces page via arrow keys.",
 			"Controllers": [
 				"Keypad"
 			],
@@ -55,6 +55,109 @@
 				}
 			],
 			"PropertyInspectorPath": "ui/newspace.html"
+		},
+		{
+			"Name": "Agent Summary",
+			"UUID": "com.resilientsoftware.herdrdeck.summary",
+			"Icon": "icons/list-summary",
+			"Tooltip": "Counts your workspaces by state on one key or the Neo Infobar; press to jump to the one that needs you most, blocked first.",
+			"Controllers": [
+				"Keypad",
+				"Neo"
+			],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "icons/summary"
+				}
+			],
+			"PropertyInspectorPath": "ui/summary.html"
+		},
+		{
+			"Name": "Slash Command",
+			"UUID": "com.resilientsoftware.herdrdeck.command",
+			"Icon": "icons/list-command",
+			"Tooltip": "Sends a slash command such as /review to the focused agent or a pinned workspace.",
+			"Controllers": [
+				"Keypad"
+			],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "icons/command"
+				}
+			],
+			"PropertyInspectorPath": "ui/command.html"
+		},
+		{
+			"Name": "Send Text",
+			"UUID": "com.resilientsoftware.herdrdeck.text",
+			"Icon": "icons/list-text",
+			"Tooltip": "Types a phrase into the focused agent or a pinned workspace, then presses Enter unless you turn it off.",
+			"Controllers": [
+				"Keypad"
+			],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "icons/text"
+				}
+			],
+			"PropertyInspectorPath": "ui/text.html"
+		},
+		{
+			"Name": "Send Keys",
+			"UUID": "com.resilientsoftware.herdrdeck.keys",
+			"Icon": "icons/list-keys",
+			"Tooltip": "Sends key presses to the focused agent or a pinned workspace; esc by default, to interrupt.",
+			"Controllers": [
+				"Keypad"
+			],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "icons/keys"
+				}
+			],
+			"PropertyInspectorPath": "ui/keys.html"
+		},
+		{
+			"Name": "Cycle",
+			"UUID": "com.resilientsoftware.herdrdeck.cycle",
+			"Icon": "icons/list-cycle",
+			"Tooltip": "Each press sends the next value, such as /model opus, then sonnet, then haiku, to the focused agent or a pinned workspace.",
+			"Controllers": [
+				"Keypad"
+			],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "icons/cycle"
+				}
+			],
+			"PropertyInspectorPath": "ui/cycle.html"
+		},
+		{
+			"Name": "New Tab",
+			"UUID": "com.resilientsoftware.herdrdeck.newtab",
+			"Icon": "icons/list-newtab",
+			"Tooltip": "Opens a Herdr tab in the target pane's folder, or a folder you choose, and focuses it.",
+			"Controllers": [
+				"Keypad"
+			],
+			"SupportedInMultiActions": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "icons/newtab"
+				}
+			],
+			"PropertyInspectorPath": "ui/newtab.html"
 		}
 	]
 }

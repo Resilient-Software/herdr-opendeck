@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 0;
+				color: #969696;
+				font-family: "Segoe UI", Arial, Roboto, Helvetica, sans-serif;
+				font-size: 9pt;
+				line-height: 1.4;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Look">
+			<sdpi-radio setting="look" default="ring">
+				<option value="ring">Ring</option>
+				<option value="list">List</option>
+			</sdpi-radio>
+		</sdpi-item>
+		<sdpi-item>
+			<p class="help">
+				Counts workspaces by state. Press to jump to the one that needs you most: blocked, then done, then idle.
+			</p>
+		</sdpi-item>
+	</body>
+</html>

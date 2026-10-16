@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 0;
+				color: #969696;
+				font-family: "Segoe UI", Arial, Roboto, Helvetica, sans-serif;
+				font-size: 9pt;
+				line-height: 1.4;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Folder">
+			<sdpi-textfield setting="cwd" placeholder="Focused pane's folder"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Open in">
+			<sdpi-select
+				setting="target"
+				label-setting="targetLabel"
+				datasource="getWorkspaces"
+				hot-reload
+				show-refresh
+				loading="Loading workspaces…"
+			></sdpi-select>
+		</sdpi-item>
+		<sdpi-item>
+			<p class="help">
+				Opens a tab in the target workspace and focuses it. An empty folder means the target pane's folder.
+			</p>
+		</sdpi-item>
+	</body>
+</html>

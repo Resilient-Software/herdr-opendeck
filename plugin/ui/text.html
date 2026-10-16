@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<script src="sdpi-components.js"></script>
+		<style>
+			.help {
+				margin: 0;
+				color: #969696;
+				font-family: "Segoe UI", Arial, Roboto, Helvetica, sans-serif;
+				font-size: 9pt;
+				line-height: 1.4;
+			}
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Text">
+			<sdpi-textfield setting="text" placeholder="go ahead" required></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Enter">
+			<sdpi-checkbox setting="submit" label="Press Enter after the text" default="true"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Send to">
+			<sdpi-select
+				setting="target"
+				label-setting="targetLabel"
+				datasource="getWorkspaces"
+				hot-reload
+				show-refresh
+				loading="Loading workspaces…"
+			></sdpi-select>
+		</sdpi-item>
+		<sdpi-item>
+			<p class="help">Types the text into the agent. Nothing is typed while the agent waits at a permission prompt.</p>
+		</sdpi-item>
+	</body>
+</html>
