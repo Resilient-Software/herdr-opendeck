@@ -1,4 +1,5 @@
 import streamDeck, { type KeyAction } from "@elgato/streamdeck";
+import type { JsonObject } from "@elgato/utils";
 
 import { Bridge, gitInfoFor, raiseClient, type Snapshot, workingDir, type Workspace } from "./herdr";
 import { Assignment, clamp, pageCount, pageOf, pagerActive, pageSize, visibleRange } from "./layout";
@@ -16,7 +17,7 @@ const EVENT_MIN_GAP_MS = 300;
 type Role = "inert" | "newSpace" | "pagerLeft" | "pagerRight" | "space";
 
 type Instance = {
-	action: KeyAction;
+	action: KeyAction<JsonObject>;
 	column: number;
 	isNewSpace: boolean;
 	row: number;
@@ -30,7 +31,7 @@ type Instance = {
 export class DeckController {
 	private readonly assigned = new Map<string, string>();
 	private readonly assignment = new Assignment();
-	private readonly bridge = new Bridge();
+	private readonly bridge = new Bridge({ log: (message) => streamDeck.logger.info(message) });
 	private everConnected = false;
 	private failedUntil = 0;
 	private failedWS = "";
@@ -46,6 +47,7 @@ export class DeckController {
 	private readonly resubscribe = new Backoff(SUBSCRIBE_BACKOFF_CAP_TICKS);
 	private readonly roles = new Map<string, Role>();
 	private snapshot: Snapshot | undefined;
+	private subscribeFailing = false;
 	private subscribed = false;
 	private subscribing = false;
 	private ticks = 0;
@@ -55,7 +57,7 @@ export class DeckController {
 		setInterval(() => this.tick(), 1000);
 	}
 
-	public add(id: string, action: KeyAction, isNewSpace: boolean): void {
+	public add(id: string, action: KeyAction<JsonObject>, isNewSpace: boolean): void {
 		const coordinates = action.coordinates ?? { column: 0, row: 0 };
 		this.instances.set(id, { action, column: coordinates.column, isNewSpace, row: coordinates.row });
 		this.rendered.delete(id);
@@ -129,12 +131,18 @@ export class DeckController {
 				() => {
 					this.subscribed = true;
 					this.subscribing = false;
+					this.subscribeFailing = false;
 					this.resubscribe.reset();
+					streamDeck.logger.info("herdr: subscribed to session events");
 					this.refresh.trigger();
 				},
-				() => {
+				(err) => {
 					this.subscribing = false;
 					this.resubscribe.failure();
+					if (!this.subscribeFailing) {
+						this.subscribeFailing = true;
+						streamDeck.logger.info(`herdr: event subscription failed, polling instead: ${err}`);
+					}
 				},
 			);
 	}
@@ -173,6 +181,9 @@ export class DeckController {
 		this.ticksSincePoll = 0;
 		try {
 			const snapshot = await this.bridge.snapshot();
+			if (this.failures >= OFFLINE_AFTER_FAILURES) {
+				streamDeck.logger.info("herdr: reachable again");
+			}
 			this.failures = 0;
 			this.everConnected = true;
 			this.snapshot = snapshot;
@@ -183,11 +194,12 @@ export class DeckController {
 				}
 			}
 			this.render();
-		} catch {
+		} catch (err) {
 			this.failures++;
 			// Keep the last good frame through two failed polls to avoid
 			// flicker.
 			if (this.failures === OFFLINE_AFTER_FAILURES) {
+				streamDeck.logger.info(`herdr: offline: ${err}`);
 				this.render();
 			}
 		} finally {

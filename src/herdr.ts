@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import type { Tokens } from "./activity";
-import { defaultSocketPath, SocketClient, type SubscriptionEvent } from "./socket";
+import { defaultSocketPath, HerdrApiError, SocketClient, type SubscriptionEvent } from "./socket";
 
 const execFileAsync = promisify(execFile);
 
@@ -19,15 +19,30 @@ export type AgentStatus = "blocked" | "done" | "idle" | "unknown" | "working";
 
 export type Pane = {
 	pane_id: string;
-	agent: string;
+	workspace_id: string;
+	tab_id?: string;
+	agent?: string;
 	agent_status: AgentStatus;
 	focused: boolean;
-	label: string;
-	terminal_title_stripped: string;
-	cwd: string;
-	workspace_id: string;
+	label?: string;
+	terminal_title_stripped?: string;
+	cwd?: string;
 	/** Metadata tokens; herdr-agent-activity publishes rsact_* here. */
 	tokens?: Tokens;
+};
+
+export type Tab = {
+	tab_id: string;
+	workspace_id: string;
+	number: number;
+	label?: string;
+	focused: boolean;
+};
+
+/** Per tab; focused_pane_id is kept while the tab is in the background. */
+export type Layout = {
+	tab_id: string;
+	focused_pane_id?: string;
 };
 
 export type Worktree = {
@@ -44,14 +59,20 @@ export type Workspace = {
 	tab_count: number;
 	focused: boolean;
 	worktree: Worktree | null;
+	active_tab_id?: string;
 	/** Metadata tokens; herdr-agent-activity publishes rsact_* rollups here. */
 	tokens?: Tokens;
 };
 
+/** The focused_* ids are absent when the session has no workspaces. */
 export type Snapshot = {
-	focused_pane_id: string;
+	focused_workspace_id?: string;
+	focused_tab_id?: string;
+	focused_pane_id?: string;
 	panes: Pane[];
 	workspaces: Workspace[];
+	tabs?: Tab[];
+	layouts?: Layout[];
 };
 
 export type GitInfo = {
@@ -185,46 +206,96 @@ function isPaneChurn(event: SubscriptionEvent, seen: Map<string, string>): boole
 	return false;
 }
 
+type Transport = "cli" | "socket";
+
+/**
+ * herdr prints refusals as a JSON error envelope on stderr and exits 1;
+ * those become HerdrApiError like their socket counterparts.
+ */
+function cliApiError(err: unknown): HerdrApiError | undefined {
+	const stderr = (err as { stderr?: unknown } | undefined)?.stderr;
+	if (typeof stderr !== "string") {
+		return undefined;
+	}
+	for (const line of stderr.trim().split("\n").reverse()) {
+		try {
+			const error = (JSON.parse(line) as { error?: { code?: unknown; message?: unknown } } | null)?.error;
+			if (typeof error?.code === "string") {
+				return new HerdrApiError(error.code, typeof error.message === "string" ? error.message : error.code);
+			}
+		} catch {
+			// Not the envelope line.
+		}
+	}
+	return undefined;
+}
+
+function neverConnected(err: unknown): boolean {
+	return (err as NodeJS.ErrnoException | undefined)?.syscall === "connect";
+}
+
 export class Bridge {
 	/** Successful calls served per transport; compat-check asserts on it. */
 	public readonly transport = { socket: 0, cli: 0 };
 	private binary = "";
 	private failuresSinceResolve = 0;
+	private lastTransport: Transport | undefined;
+	private readonly log: (message: string) => void;
 	private readonly socket: SocketClient;
 
-	constructor(opts?: { socketPath?: string; timeoutMs?: number }) {
+	constructor(opts?: { socketPath?: string; timeoutMs?: number; log?: (message: string) => void }) {
 		this.socket = new SocketClient(opts?.socketPath ?? defaultSocketPath(), { timeoutMs: opts?.timeoutMs });
+		this.log = opts?.log ?? (() => {});
 	}
 
-	public async createWorkspace(): Promise<void> {
-		try {
-			await this.socket.request("workspace.create", { focus: true });
-			this.transport.socket++;
-		} catch {
-			await this.run("workspace", "create", "--focus");
-			this.transport.cli++;
-		}
+	public createTab(workspaceId: string, cwd: string | undefined): Promise<void> {
+		return this.call("tab.create", { workspace_id: workspaceId, ...(cwd ? { cwd } : {}), focus: true }, [
+			"tab",
+			"create",
+			"--workspace",
+			workspaceId,
+			...(cwd ? ["--cwd", cwd] : []),
+			"--focus",
+		]);
 	}
 
-	public async focusWorkspace(workspaceId: string): Promise<void> {
-		try {
-			await this.socket.request("workspace.focus", { workspace_id: workspaceId });
-			this.transport.socket++;
-		} catch {
-			await this.run("workspace", "focus", workspaceId);
-			this.transport.cli++;
-		}
+	public createWorkspace(): Promise<void> {
+		return this.call("workspace.create", { focus: true }, ["workspace", "create", "--focus"]);
+	}
+
+	public focusWorkspace(workspaceId: string): Promise<void> {
+		return this.call("workspace.focus", { workspace_id: workspaceId }, ["workspace", "focus", workspaceId], {
+			idempotent: true,
+		});
+	}
+
+	public promptAgent(paneId: string, text: string): Promise<void> {
+		return this.call("agent.prompt", { target: paneId, text }, ["agent", "prompt", paneId, text]);
+	}
+
+	public sendInput(paneId: string, text: string): Promise<void> {
+		return this.call("pane.send_input", { pane_id: paneId, text, keys: ["enter"] }, ["pane", "run", paneId, text]);
+	}
+
+	public sendKeys(paneId: string, keys: string[]): Promise<void> {
+		return this.call("pane.send_keys", { pane_id: paneId, keys }, ["pane", "send-keys", paneId, ...keys]);
+	}
+
+	public sendText(paneId: string, text: string): Promise<void> {
+		return this.call("pane.send_text", { pane_id: paneId, text }, ["pane", "send-text", paneId, text]);
 	}
 
 	public async snapshot(): Promise<Snapshot> {
 		try {
 			const result = (await this.socket.request("session.snapshot", {})) as { snapshot?: Snapshot };
 			if (result?.snapshot) {
-				this.transport.socket++;
+				this.served("socket");
 				return result.snapshot;
 			}
-		} catch {
-			// Socket unavailable (old herdr, moved socket): use the CLI.
+		} catch (err) {
+			if (err instanceof HerdrApiError) {
+				throw err;
+			}
 		}
 		let out: string;
 		try {
@@ -243,17 +314,13 @@ export class Bridge {
 			result?: Partial<Snapshot> & { snapshot?: Snapshot };
 		};
 		if (envelope.result?.snapshot) {
-			this.transport.cli++;
+			this.served("cli");
 			return envelope.result.snapshot;
 		}
 		// Some builds place the snapshot fields directly under result.
 		if (envelope.result?.panes) {
-			this.transport.cli++;
-			return {
-				focused_pane_id: envelope.result.focused_pane_id ?? "",
-				panes: envelope.result.panes,
-				workspaces: envelope.result.workspaces ?? [],
-			};
+			this.served("cli");
+			return { workspaces: [], ...envelope.result } as Snapshot;
 		}
 		throw new Error("no snapshot in herdr api response");
 	}
@@ -289,12 +356,45 @@ export class Bridge {
 		}
 	}
 
+	/**
+	 * Socket first, the CLI only when the socket could not carry the call;
+	 * a HerdrApiError is the server's answer and is final either way.
+	 * Unless the call is idempotent it falls back only when the socket
+	 * never connected: a timeout can follow a request the server already
+	 * carried out, and repeating it would type the text twice.
+	 */
+	private async call(method: string, params: object, cli: string[], opts?: { idempotent?: boolean }): Promise<void> {
+		try {
+			await this.socket.request(method, params);
+			this.served("socket");
+			return;
+		} catch (err) {
+			if (err instanceof HerdrApiError || (!opts?.idempotent && !neverConnected(err))) {
+				throw err;
+			}
+		}
+		await this.run(...cli);
+		this.served("cli");
+	}
+
 	private async run(...args: string[]): Promise<string> {
 		if (!this.binary) {
 			this.binary = await resolveBinary();
 		}
-		const { stdout } = await execFileAsync(this.binary, args, { timeout: RUN_TIMEOUT_MS });
-		return stdout;
+		try {
+			const { stdout } = await execFileAsync(this.binary, args, { timeout: RUN_TIMEOUT_MS });
+			return stdout;
+		} catch (err) {
+			throw cliApiError(err) ?? err;
+		}
+	}
+
+	private served(transport: Transport): void {
+		this.transport[transport]++;
+		if (this.lastTransport !== transport) {
+			this.lastTransport = transport;
+			this.log(transport === "socket" ? "herdr: using the socket API" : "herdr: socket unavailable, using the CLI");
+		}
 	}
 }
 
@@ -383,7 +483,7 @@ function basename(path: string): string {
  * client process's ancestry to the containing .app bundle.
  */
 export async function raiseClient(): Promise<void> {
-	if (process.platform !== "darwin") {
+	if (process.platform !== "darwin" || process.env.HERDR_DECK_NO_RAISE === "1") {
 		return;
 	}
 	const app = await hostingApp();

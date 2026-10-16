@@ -1,6 +1,6 @@
 {
 	"name": "herdr-opendeck",
-	"version": "0.2.0",
+	"version": "1.0.0",
 	"description": "Mirror Herdr workspaces onto a Stream Deck",
 	"license": "Apache-2.0",
 	"repository": "github:Resilient-Software/herdr-opendeck",
@@ -14,13 +14,15 @@
 		"lint": "eslint --max-warnings 0 src test"
 	},
 	"dependencies": {
-		"@elgato/streamdeck": "^2.1.2"
+		"@elgato/streamdeck": "^3.0.2",
+		"@elgato/utils": "^0.6.1"
 	},
 	"devDependencies": {
 		"@elgato/eslint-config": "^0.3.2",
 		"@elgato/prettier-config": "^0.3.3",
 		"@eslint/js": "^9.39.5",
 		"@types/node": "^24.0.0",
+		"@types/ws": "^8.18.2",
 		"esbuild": "^0.25.0",
 		"eslint": "^9.39.5",
 		"eslint-plugin-jsdoc": "^54.7.0",
@@ -28,7 +30,8 @@
 		"prettier": "^3.9.6",
 		"typescript": "^5.6.0",
 		"typescript-eslint": "^8.68.0",
-		"vitest": "^3.0.0"
+		"vitest": "^3.0.0",
+		"ws": "^8.22.0"
 	},
 	"prettier": "@elgato/prettier-config"
 }

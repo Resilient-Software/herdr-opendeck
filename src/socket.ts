@@ -52,8 +52,24 @@ function attachLineReader(socket: net.Socket, onLine: (envelope: Envelope) => vo
 	});
 }
 
-function errorFrom(envelope: Envelope): Error {
-	return new Error(envelope.error?.message ?? envelope.error?.code ?? "herdr socket error");
+/**
+ * The server understood the request and refused it. Transport failures
+ * (no server, timeout, dropped connection) stay plain Errors.
+ */
+export class HerdrApiError extends Error {
+	public override readonly name = "HerdrApiError";
+
+	constructor(
+		public readonly code: string,
+		message: string,
+	) {
+		super(message);
+	}
+}
+
+function errorFrom(envelope: Envelope): HerdrApiError {
+	const code = envelope.error?.code ?? "unknown";
+	return new HerdrApiError(code, envelope.error?.message ?? code);
 }
 
 export class SocketClient {

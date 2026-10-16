@@ -1,7 +1,7 @@
 id = "com.resilientsoftware.herdrdeck"
 name = "Herdr Deck"
-version = "0.2.0"
-min_herdr_version = "0.8.0"
+version = "1.0.0"
+min_herdr_version = "0.8.2"
 description = "Mirror Herdr workspaces onto a Stream Deck: live tiles with repository, branch and agent status."
 platforms = ["macos", "linux"]
 

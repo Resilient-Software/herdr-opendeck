@@ -1,6 +1,5 @@
 import {
 	action,
-	type KeyAction,
 	type KeyUpEvent,
 	SingletonAction,
 	type WillAppearEvent,
@@ -21,7 +20,9 @@ export class SpaceAction extends SingletonAction {
 	}
 
 	public override onWillAppear(ev: WillAppearEvent): void {
-		this.controller.add(ev.action.id, ev.action as KeyAction, false);
+		if (ev.action.isKey()) {
+			this.controller.add(ev.action.id, ev.action, false);
+		}
 	}
 
 	public override onWillDisappear(ev: WillDisappearEvent): void {
@@ -41,7 +42,9 @@ export class NewSpaceAction extends SingletonAction {
 	}
 
 	public override onWillAppear(ev: WillAppearEvent): void {
-		this.controller.add(ev.action.id, ev.action as KeyAction, true);
+		if (ev.action.isKey()) {
+			this.controller.add(ev.action.id, ev.action, true);
+		}
 	}
 
 	public override onWillDisappear(ev: WillDisappearEvent): void {
