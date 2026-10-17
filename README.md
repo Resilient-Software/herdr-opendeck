@@ -28,8 +28,7 @@ plugin installed, the deck shows that work: a blue tile with an icon and a
 count for each kind still running (subagents, background shells, monitors),
 and a dark mauve tile with a loop or clock icon and a countdown such as `17M`
 for a scheduled check. A plain tile really means finished. The Agent Summary
-key counts every state on one key, or on the Infobar of a Stream Deck Neo,
-and a press jumps to the workspace that needs you most, blocked first.
+key counts every state on one key, and a press jumps to the workspace that needs you most, blocked first.
 
 **Drive agents.** Control keys send a slash command, a phrase, key presses or
 the next value of a cycle to the agent you are focused on, or to a workspace
@@ -45,7 +44,7 @@ See [DESIGN.md](DESIGN.md) for the full UX.
 |---|---|---|
 | Herdr Space | One live workspace tile per key; press to focus it | none |
 | New Herdr Space | Creates a workspace and focuses it | none |
-| Agent Summary | Counts workspaces by state, as a ring or a list, also on the Neo Infobar; press focuses the one that needs you most | look |
+| Agent Summary | Counts workspaces by state, as a ring or a list; press focuses the one that needs you most | look |
 | Slash Command | Sends a command such as `/review`, then Enter | command, target |
 | Send Text | Types a phrase, then Enter unless turned off | text, press Enter, target |
 | Send Keys | Sends key presses; `esc` by default | keys, target |
@@ -67,10 +66,8 @@ sh scripts/install.sh
 builds the bundle and installs it into OpenDeck's plugins directory,
 recording the `herdr` CLI path for the plugin to use. For the official
 Elgato Stream Deck app, use `sh scripts/install-elgato.sh` instead — the
-same bundle works in both hosts. On a Stream Deck app older than 7.6 it
-installs a copy without the Neo Infobar and says so. `sh scripts/pack.sh`
-produces a `.streamDeckPlugin` installer under `dist/` (`--legacy` packs the
-build for older apps); tagged releases publish one.
+same bundle works in both hosts. `sh scripts/pack.sh` produces a
+`.streamDeckPlugin` installer under `dist/`; tagged releases publish one.
 
 Herdr itself can install it: `herdr plugin install Resilient-Software/herdr-opendeck`.
 
@@ -92,9 +89,7 @@ them. Configure a control key in its property inspector.
   and the end-to-end suite against v0.8.2 and the latest release weekly. The
   plugin finds the `herdr` CLI via `HERDR_PATH`, the recorded install path,
   the official install locations, or a running herdr process
-- Elgato Stream Deck 7.6+ (the Neo Infobar needs it). Builds from source
-  also install on Stream Deck 7.1–7.5, without the Infobar. Or OpenDeck 2.14+
-  with Node.js 24+ installed
+- Elgato Stream Deck 7.1+, or OpenDeck 2.14+ with Node.js 24+ installed
 - macOS. The Elgato app also runs on Windows, but the plugin has not been tested there
 - Node.js 24+ and npm to build
 
@@ -120,7 +115,7 @@ sheets at real key size under `dist/sheet/`.
 
 - `src/plugin.ts` — entry point; registers the actions and connects
 - `src/controller.ts` — snapshot loop and key coordination: slots, paging,
-  the summary and Infobar, control key presses, repaints
+  the summary, control key presses, repaints
 - `src/controls.ts` — control key faces and what a press sends
 - `src/actions.ts` — the action classes
 - `src/state.ts` — workspace states, summary counts, attention order and
@@ -134,10 +129,10 @@ sheets at real key size under `dist/sheet/`.
 - `src/schedule.ts` — poll cadence and event coalescing
 - `src/layout.ts` — pure key-assignment and paging logic
 - `src/activity.ts` — herdr-agent-activity tokens
-- `src/render.ts` — SVG rendering: space tiles, summary, Infobar, control keys
+- `src/render.ts` — SVG rendering: space tiles, summary, control keys
 - `src/glyphs.ts` — activity icons
 - `plugin/` — `.sdPlugin` bundle assets (manifest, icons, property
-  inspectors, Infobar layout)
+  inspectors)
 - `scripts/e2e/` — end-to-end harness
 - `test/` — vitest suites
 

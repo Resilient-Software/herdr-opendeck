@@ -9,7 +9,6 @@ import {
 	connectingTile,
 	controlTile,
 	emptyTile,
-	infobarImage,
 	newSpaceTile,
 	noSpacesTile,
 	offlineTile,
@@ -29,7 +28,6 @@ const FLASH_OK_MS = 900;
 const FLASH_FAIL_MS = 1500;
 const EVENT_DEBOUNCE_MS = 75;
 const EVENT_MIN_GAP_MS = 300;
-export const INFOBAR_LAYOUT = "layouts/neo-summary.json";
 
 export type KeyKind = ControlKind | "newSpace" | "space" | "summary";
 
@@ -39,12 +37,6 @@ export type KeyHandle = {
 	setImage(image?: string): Promise<void>;
 	setSettings(settings: JsonObject): Promise<void>;
 	showAlert(): Promise<void>;
-};
-
-/** The parts of a Stream Deck Neo Infobar action the controller drives. */
-export type InfobarHandle = {
-	setFeedback(feedback: { canvas: string }): Promise<void>;
-	setFeedbackLayout(layout: string): Promise<void>;
 };
 
 export type BridgeLike = Pick<
@@ -89,7 +81,7 @@ function isControl(kind: KeyKind): kind is ControlKind {
 /**
  * Mirrors the Herdr session onto every participating key: the spaces grid
  * (stable slots, state backgrounds, the dynamic two-key pager), the summary
- * keys and Infobars, and the control keys. Keys opt in by carrying an
+ * keys, and the control keys. Keys opt in by carrying an
  * action; the grid only ever uses keys carrying the Herdr Space action.
  */
 export class DeckController {
@@ -105,7 +97,6 @@ export class DeckController {
 	private failedWS = "";
 	private failures = 0;
 	private readonly flashes = new Map<string, { flash: Flash; until: number }>();
-	private readonly infobars = new Map<string, InfobarHandle>();
 	private readonly instances = new Map<string, Instance>();
 	private lastFocusedWS = "";
 	private readonly log: Logger;
@@ -147,15 +138,6 @@ export class DeckController {
 		}
 		this.rendered.delete(id);
 		this.render();
-	}
-
-	public addInfobar(id: string, handle: InfobarHandle): void {
-		this.infobars.set(id, handle);
-		this.rendered.delete(id);
-		handle.setFeedbackLayout(INFOBAR_LAYOUT).then(
-			() => this.render(),
-			(err) => this.log.error(`infobar layout failed: ${err}`),
-		);
 	}
 
 	public keyDown(id: string): void {
@@ -210,7 +192,6 @@ export class DeckController {
 
 	public remove(id: string): void {
 		this.instances.delete(id);
-		this.infobars.delete(id);
 		this.rendered.delete(id);
 		this.roles.delete(id);
 		this.assigned.delete(id);
@@ -437,7 +418,6 @@ export class DeckController {
 		this.renderSpaces();
 		this.renderSummaries();
 		this.renderControls();
-		this.renderInfobars();
 	}
 
 	private renderControls(): void {
@@ -456,26 +436,6 @@ export class DeckController {
 			const face = controlFace(inst.kind, settings, target, index, offline ? "OFFLINE" : "");
 			const flash = this.activeFlash(id);
 			this.setImage(id, inst, controlTile(flash ? { ...face, flash } : face));
-		}
-	}
-
-	private renderInfobars(): void {
-		const connecting = !this.everConnected || this.snapshot === undefined;
-		const offline = this.failures >= OFFLINE_AFTER_FAILURES;
-		let image: string;
-		if (connecting) {
-			image = infobarImage(null, { message: "HERDR · CONNECTING" });
-		} else if (offline) {
-			image = infobarImage(null, { dim: true, message: "HERDR OFFLINE" });
-		} else {
-			image = infobarImage(countStates(this.snapshot!));
-		}
-		for (const [id, handle] of this.infobars) {
-			if (this.rendered.get(id) === image) {
-				continue;
-			}
-			this.rendered.set(id, image);
-			handle.setFeedback({ canvas: image }).catch(() => this.rendered.delete(id));
 		}
 	}
 

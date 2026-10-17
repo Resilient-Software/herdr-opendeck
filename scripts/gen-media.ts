@@ -6,7 +6,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 
 import type { GitInfo, Workspace } from "../src/herdr";
-import { controlTile, infobarImage, newSpaceTile, pagerTile, spaceTile, summaryTile } from "../src/render";
+import { controlTile, newSpaceTile, pagerTile, spaceTile, summaryTile } from "../src/render";
 import type { Counts } from "../src/state";
 
 const BG = "#11111b";
@@ -176,22 +176,17 @@ const states = canvas(
 		text("Name, repository and branch on every key.", 960, 790, 30, SUBTEXT, 400),
 );
 
-const neoKeys = [tiles.focused, tiles.working, tiles.blocked, tiles.busy, tiles.loop, tiles.idle, tiles.done, controls.keys];
-const neoX = 1110;
-const neoY = 290;
-const neo =
-	`<rect x="${neoX}" y="${neoY}" width="680" height="470" rx="40" fill="${DEVICE}" stroke="${BORDER}" stroke-width="2"/>` +
-	neoKeys.map((key, i) => embed(key, neoX + 40 + (i % 4) * 155, neoY + 36 + Math.floor(i / 4) * 155, 135)).join("") +
-	embed(infobarImage(mix), neoX + 166, neoY + 360, 348, 8);
+const summaryMix = counts({ blocked: 2, working: 3, background: 1, scheduled: 1, done: 1, idle: 1 });
 const summary = canvas(
 	text("See what needs you", 960, 130, 76, TEXT, 700) +
 		text("Agent Summary counts every agent by state. Press it to jump to the one that needs you, blocked first.", 960, 196, 30, SUBTEXT, 400) +
-		embed(summaryTile(counts({ blocked: 2, working: 3, background: 1, scheduled: 1, done: 1, idle: 1 }), "ring"), 140, 330, 380) +
-		embed(summaryTile(counts({ blocked: 2, working: 3, background: 1, scheduled: 1, done: 1, idle: 1 }), "list"), 600, 330, 380) +
-		text("Ring", 330, 770, 32, TEXT, 600) +
-		text("List", 790, 770, 32, TEXT, 600) +
-		neo +
-		text("Stream Deck Neo Infobar", neoX + 340, 820, 32, TEXT, 600),
+		embed(summaryTile(summaryMix, "ring"), 170, 320, 400) +
+		embed(summaryTile(summaryMix, "list"), 760, 320, 400) +
+		text("→", 1270, 560, 90, SUBTEXT, 700) +
+		embed(tiles.blocked, 1350, 320, 400) +
+		text("Ring", 370, 790, 32, TEXT, 600) +
+		text("List", 960, 790, 32, TEXT, 600) +
+		text("Press: jumps to the blocked agent", 1550, 790, 32, TEXT, 600),
 );
 
 const controlKeys = [

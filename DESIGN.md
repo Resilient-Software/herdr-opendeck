@@ -93,7 +93,7 @@ Pagers exist only while spaces exceed the participating keys. They are controls,
 - If the focused space is off the visible page, the arrow pointing toward it is accented.
 - When the space count fits the keys again, both pager keys return to being space tiles.
 
-## Agent Summary and the Neo Infobar
+## Agent Summary
 
 One key that counts workspaces by state, so the sum answers "how many are really finished?".
 
@@ -114,8 +114,6 @@ States always appear in that order. The key has two looks, chosen in the propert
 - **List:** one row per non-zero state — a colour swatch, the count and the state word. With nothing counted the key shows `NO AGENTS`.
 
 **Press** focuses the workspace that needs you most and raises the hosting application, exactly like a space tile, with `FOCUSING…` and `FAILED · TRY AGAIN` in the summary's footer. The order is blocked, then done, then idle, each by workspace number, skipping the workspace that is already focused. With nothing waiting, the footer flashes `ALL CLEAR`.
-
-**Neo Infobar.** On a Stream Deck Neo the same action can be placed on the Infobar, a 232 × 50 strip: the total in large type with an `AGENTS` caption at the left, up to six per-state counts in their state colours across the rest, and a 4 px proportional bar of the same colours along the bottom edge. The Infobar is display-only; it receives no presses. It needs Stream Deck 7.6 or later.
 
 ## Control keys
 
@@ -168,7 +166,6 @@ Send Keys uses `pane.send_keys`; New Tab uses `tab.create` with focus, then rais
 | Pager `←` / `→` (only when present) | One page in that direction | Same as press |
 | New Herdr Space | Create a workspace (`herdr workspace create --focus`) and raise the hosting application | Same as press |
 | Agent Summary | Focus the workspace that needs you most (blocked, then done, then idle; never the focused one) and raise the hosting application; `ALL CLEAR` when none | Same as press |
-| Agent Summary on the Neo Infobar | Display only | — |
 | Slash Command | Send the command and Enter to the target | Same as press |
 | Send Text | Send the text to the target, with Enter unless turned off | Same as press |
 | Send Keys | Send the key presses to the target, even to a blocked agent | Same as press |
@@ -193,7 +190,7 @@ The New Herdr Space key renders as a green `+` with `NEW SPACE` below; it dims a
 - Without the socket (socket moved, subscribe refused), fall back to polling the snapshot at 1 Hz via the CLI and retry the subscription with exponential backoff (1 s doubling to a 15 s cap; reset on success). Redraw only keys whose image model changed in either mode.
 - Commands fall back to the CLI only when the socket itself fails. An error Herdr returns (a blocked agent, an unknown pane) is final for that press.
 - The pager, when present, always occupies the bottom-right key; never reinterpret a space tile as navigation.
-- Countdowns on space tiles, the summary and the Infobar repaint every 15 s.
+- Countdowns on space tiles and the summary repaint every 15 s.
 
 ## Empty, loading, and offline states
 
@@ -201,7 +198,7 @@ The New Herdr Space key renders as a green `+` with `NEW SPACE` below; it dims a
 - **Online, no workspaces:** top-left shows `NO SPACES · OPEN HERDR`; all other data keys are black and pagers show `0`.
 - **Unused positions:** fully black and inert; do not show fake slot numbers or plus buttons.
 - **Transient poll failure:** keep the last good frame for two failed polls to avoid flicker.
-- **Offline after three failures:** freeze and dim last-known labels on plain backgrounds, disable all focus and page actions, and show `HERDR OFFLINE` in red text on the top-left key. Summary, Infobar and control keys dim and go inert, presses send nothing, and the summary does not keep showing stale counts. Recover automatically on the next valid snapshot.
+- **Offline after three failures:** freeze and dim last-known labels on plain backgrounds, disable all focus and page actions, and show `HERDR OFFLINE` in red text on the top-left key. Summary and control keys dim and go inert, presses send nothing, and the summary does not keep showing stale counts. Recover automatically on the next valid snapshot.
 
 ## Staged roadmap
 
@@ -230,7 +227,7 @@ Replace the 1 Hz CLI poll as the primary update path: talk to the herdr server s
 ### 1.0 — summary and agent controls
 
 - Agent activity tiles (blue background work, mauve scheduled checks) with pictogram footers.
-- Agent Summary key with ring and list looks, and on the Stream Deck Neo Infobar.
+- Agent Summary key with ring and list looks.
 - Control keys: Slash Command, Send Text, Send Keys, Cycle and New Tab, targeting the focused agent or a pinned workspace.
 - Property inspectors for every action, an end-to-end harness against a sandbox Herdr server, and a Herdr floor of 0.8.2.
 

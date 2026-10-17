@@ -5,7 +5,6 @@ import {
 	connectingTile,
 	controlTile,
 	emptyTile,
-	infobarImage,
 	newSpaceTile,
 	noSpacesTile,
 	offlineTile,
@@ -91,21 +90,6 @@ describe("summaryTile", () => {
 	});
 });
 
-describe("infobarImage", () => {
-	test("is drawn on the 232 × 50 Infobar canvas with a cell per state present", () => {
-		const out = svg(infobarImage(counts({ blocked: 1, working: 2, done: 1 })));
-		expect(out).toContain('viewBox="0 0 232 50"');
-		expect(out).toContain(">4</text>");
-		expect(out.match(/<rect /g)).toHaveLength(3);
-	});
-
-	test("shows a message instead of counts while offline", () => {
-		const out = svg(infobarImage(null, { dim: true, message: "OFFLINE" }));
-		expect(out).toContain(">OFFLINE<");
-		expect(out).not.toContain("AGENTS");
-	});
-});
-
 describe("controlTile", () => {
 	test("shows caption, value and target", () => {
 		const out = svg(controlTile({ caption: "command", value: "/review", footer: "> api-server", tone: "blue" }));
@@ -141,7 +125,6 @@ describe("every key image", () => {
 			spaceTile(space({ focused: true }), { repo: "backend", branch: "main" }, { footer: "FOCUSING…" }),
 			summaryTile(counts({ blocked: 1, scheduled: 1, nextAt: NOW + 60_000 }), "ring", { now: NOW }),
 			summaryTile(counts({ blocked: 1, done: 2 }), "list"),
-			infobarImage(counts({ working: 1 })),
 			controlTile({ caption: "cycle", value: "opus", footer: "#2 webapp", tone: "blue" }),
 			pagerTile(true, 1, 2, true, false),
 			newSpaceTile(false),

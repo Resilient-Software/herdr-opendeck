@@ -73,18 +73,10 @@ export class NewSpaceAction extends DeckAction {
 	protected readonly kind = "newSpace";
 }
 
-/** Counts workspaces by state, on a key or the Stream Deck Neo Infobar. */
+/** Counts workspaces by state; press jumps to the one that needs you most. */
 @action({ UUID: "com.resilientsoftware.herdrdeck.summary" })
 export class SummaryAction extends DeckAction {
 	protected readonly kind = "summary";
-
-	public override onWillAppear(ev: WillAppearEvent<JsonObject>): void {
-		if (ev.action.isNeoInfobar()) {
-			this.controller.addInfobar(ev.action.id, ev.action);
-			return;
-		}
-		super.onWillAppear(ev);
-	}
 }
 
 @action({ UUID: "com.resilientsoftware.herdrdeck.command" })

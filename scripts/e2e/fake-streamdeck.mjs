@@ -26,16 +26,8 @@ export const STREAM_DECK_15 = {
 	type: 0,
 };
 
-/** A Stream Deck Neo (type 9): 4x2 keys plus the infobar. */
-export const STREAM_DECK_NEO = {
-	id: "E2E000000000000000000000000000NEO",
-	name: "Stream Deck Neo",
-	size: { columns: 4, rows: 2 },
-	type: 9,
-};
-
 /** The -info registration JSON, shaped like the one the Elgato app passes. */
-export function registrationInfo({ devices, pluginUUID, pluginVersion, appVersion = "7.6.0.23012" }) {
+export function registrationInfo({ devices, pluginUUID, pluginVersion, appVersion = "7.5.1.22901" }) {
 	return {
 		application: {
 			font: ".AppleSystemUIFont",
@@ -157,7 +149,7 @@ export class FakeStreamDeck extends EventEmitter {
 		return msg;
 	}
 
-	/** Places an action on a key (or the Neo infobar), as a profile load or drag-in does. */
+	/** Places an action on a key, as a profile load or drag-in does. */
 	willAppear({ context, action, coordinates, settings = {}, controller = "Keypad", device, state = 0 }) {
 		const deviceId = device ?? this.devices[0].id;
 		this.placed.set(context, { action, coordinates, controller, device: deviceId, state });
@@ -319,7 +311,7 @@ export class FakeStreamDeck extends EventEmitter {
 		const { action, coordinates, controller, device, state } = placed;
 		const settings = this.settings.get(context) ?? {};
 		const payload =
-			controller === "Keypad" || controller === "Neo"
+			controller === "Keypad"
 				? { controller, coordinates, isInMultiAction: false, settings, state, resources: {} }
 				: { controller, coordinates, settings, resources: {} };
 		return { action, context, device, event, payload };

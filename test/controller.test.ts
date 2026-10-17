@@ -1,7 +1,7 @@
 import type { JsonObject } from "@elgato/utils";
 import { describe, expect, test } from "vitest";
 
-import { type BridgeLike, DeckController, type InfobarHandle, type KeyHandle, type KeyKind } from "../src/controller";
+import { type BridgeLike, DeckController, type KeyHandle, type KeyKind } from "../src/controller";
 import type { Pane, Snapshot, Workspace } from "../src/herdr";
 
 function space(id: string, number: number, label: string, overrides: Partial<Workspace> = {}): Workspace {
@@ -107,19 +107,6 @@ class FakeKey implements KeyHandle {
 	}
 }
 
-class FakeInfobar implements InfobarHandle {
-	public feedback: string[] = [];
-	public layouts: string[] = [];
-
-	public async setFeedback(feedback: { canvas: string }): Promise<void> {
-		this.feedback.push(feedback.canvas);
-	}
-
-	public async setFeedbackLayout(layout: string): Promise<void> {
-		this.layouts.push(layout);
-	}
-}
-
 async function settle(): Promise<void> {
 	for (let i = 0; i < 5; i++) {
 		await new Promise((resolve) => setTimeout(resolve, 0));
@@ -168,17 +155,6 @@ describe("Agent Summary", () => {
 		expect(summary.image).toContain("ALL CLEAR");
 	});
 
-	test("draws the Infobar once laid out, without repeating unchanged images", async () => {
-		const d = await deck();
-		const infobar = new FakeInfobar();
-		d.controller.addInfobar("bar", infobar);
-		await settle();
-		await d.controller.refresh();
-		await d.controller.refresh();
-		expect(infobar.layouts).toEqual(["layouts/neo-summary.json"]);
-		expect(infobar.feedback).toHaveLength(1);
-		expect(svg(infobar.feedback[0])).toContain('viewBox="0 0 232 50"');
-	});
 });
 
 describe("control keys", () => {

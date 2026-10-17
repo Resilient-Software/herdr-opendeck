@@ -230,44 +230,6 @@ export function summaryTile(counts: Counts | null, look: SummaryLook, opt: Summa
 	return dataUrl(svg);
 }
 
-/**
- * The Stream Deck Neo Infobar strip (232 × 50 layout units): the total,
- * one count per state present, and a bar showing the mix.
- */
-export function infobarImage(counts: Counts | null, opt: { dim?: boolean; message?: string } = {}): string {
-	let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 50">`;
-	if (opt.dim) {
-		svg += `<g opacity="0.45">`;
-	}
-	if (!counts) {
-		svg += `<text x="116" y="31" fill="${COL_OVERLAY}" font-family="sans-serif" font-size="15" font-weight="600" text-anchor="middle">${esc(opt.message ?? "HERDR")}</text>`;
-	} else {
-		svg += `<text x="10" y="30" fill="${COL_TEXT}" font-family="sans-serif" font-size="26" font-weight="700">${counts.total}</text>`;
-		svg += `<text x="10" y="43" fill="${COL_SUBTEXT}" font-family="sans-serif" font-size="9">AGENTS</text>`;
-		const present = STATES.filter((s) => counts[s.state] > 0);
-		if (present.length === 0) {
-			svg += `<text x="146" y="30" fill="${COL_OVERLAY}" font-family="sans-serif" font-size="13" text-anchor="middle">NO AGENTS</text>`;
-		}
-		const left = 64;
-		const width = 222 - left;
-		const cell = width / Math.max(present.length, 1);
-		present.forEach((s, i) => {
-			svg += `<text x="${round(left + cell * (i + 0.5))}" y="31" fill="${s.colour}" font-family="sans-serif" font-size="20" font-weight="700" text-anchor="middle">${counts[s.state]}</text>`;
-		});
-		let x = left;
-		for (const s of present) {
-			const w = (width * counts[s.state]) / counts.total;
-			svg += `<rect x="${round(x)}" y="42" width="${round(Math.max(w - 2, 1))}" height="4" rx="1" fill="${s.colour}"/>`;
-			x += w;
-		}
-	}
-	if (opt.dim) {
-		svg += `</g>`;
-	}
-	svg += `</svg>`;
-	return dataUrl(svg);
-}
-
 export type ControlFace = {
 	caption: string;
 	value: string;

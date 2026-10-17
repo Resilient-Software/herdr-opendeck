@@ -18,8 +18,4 @@ for size in 72 144; do
 	done
 	magick montage -label '%t' -pointsize 9 -fill '#a6adc8' -background '#11111b' -geometry "+6+6" -tile 8x "png$size"/*.png "sheet-$size.png"
 done
-for f in infobar/*.svg; do
-	rsvg-convert -w 464 -h 100 -b '#000000' "$f" -o "${f%.svg}.png"
-done
-magick montage -label '%t' -pointsize 11 -fill '#a6adc8' -background '#11111b' -geometry "+8+8" -tile 2x infobar/*.png sheet-infobar.png
 echo "sheets in dist/sheet/"

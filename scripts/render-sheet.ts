@@ -9,7 +9,6 @@ import {
 	connectingTile,
 	controlTile,
 	emptyTile,
-	infobarImage,
 	newSpaceTile,
 	offlineTile,
 	pagerTile,
@@ -103,24 +102,13 @@ const keys: Record<string, string> = {
 	offline: offlineTile(),
 };
 
-const strips: Record<string, string> = {
-	"infobar-mix": infobarImage(counts({ blocked: 1, working: 2, background: 1, scheduled: 1, done: 1, idle: 1 })),
-	"infobar-two": infobarImage(counts({ working: 3, done: 2 })),
-	"infobar-empty": infobarImage(counts({})),
-	"infobar-offline": infobarImage(null, { dim: true, message: "HERDR OFFLINE" }),
-};
-
 function decode(image: string): string {
 	return Buffer.from(image.replace("data:image/svg+xml;base64,", ""), "base64").toString("utf8");
 }
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(`${OUT}/keys`, { recursive: true });
-mkdirSync(`${OUT}/infobar`, { recursive: true });
 for (const [name, image] of Object.entries(keys)) {
 	writeFileSync(`${OUT}/keys/${name}.svg`, decode(image));
 }
-for (const [name, image] of Object.entries(strips)) {
-	writeFileSync(`${OUT}/infobar/${name}.svg`, decode(image));
-}
-console.log(`wrote ${Object.keys(keys).length} keys and ${Object.keys(strips).length} infobar strips to ${OUT}/`);
+console.log(`wrote ${Object.keys(keys).length} keys to ${OUT}/`);

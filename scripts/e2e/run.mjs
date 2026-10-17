@@ -22,7 +22,7 @@ import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { FakeStreamDeck, sleep, STREAM_DECK_15, STREAM_DECK_NEO } from "./fake-streamdeck.mjs";
+import { FakeStreamDeck, sleep, STREAM_DECK_15 } from "./fake-streamdeck.mjs";
 import { HerdrSandbox } from "./herdr-sandbox.mjs";
 import { renderBoard, svgToPng } from "./render-board.mjs";
 
@@ -455,18 +455,6 @@ try {
 		}
 		await host.waitFor(() => !svgAt(3, 0).includes("→"), 3000, "pager gone");
 		check("pager disappears when keys return", true);
-	});
-
-	await phase("neo", async () => {
-		host.deviceDidConnect(STREAM_DECK_NEO);
-		host.willAppear({ context: "neo-infobar", action: UUID("summary"), device: STREAM_DECK_NEO.id, controller: "Neo", coordinates: { column: 0, row: 0 } });
-		const layout = await host.waitFor(() => host.feedback.get("neo-infobar:setFeedbackLayout"), 3000, "infobar layout");
-		check("Agent Summary on the Neo Infobar sets its layout", layout?.layout === "layouts/neo-summary.json", JSON.stringify(layout));
-		const feedback = await host.waitFor(() => host.feedback.get("neo-infobar:setFeedback"), 3000, "infobar image");
-		const canvas = Buffer.from(String(feedback?.canvas ?? "").replace("data:image/svg+xml;base64,", ""), "base64").toString("utf8");
-		check("Infobar draws the 232 × 50 summary strip", canvas.includes('viewBox="0 0 232 50"') && canvas.includes("AGENTS"));
-		writeFileSync(join(out, "infobar.svg"), canvas);
-		host.willDisappear("neo-infobar");
 	});
 
 	await phase("offline", async () => {
