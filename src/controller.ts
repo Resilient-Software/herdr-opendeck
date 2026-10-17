@@ -412,7 +412,7 @@ export class DeckController {
 				this.log.info(`${kind} press on ${target.pane.pane_id}: ${flash.text}`);
 			}
 			this.flash(id, flash);
-		});
+		}).catch((err) => this.log.error(`${kind} press failed: ${err}`));
 	}
 
 	/** Jumps to the next workspace that needs attention: blocked, then done, then idle. */
