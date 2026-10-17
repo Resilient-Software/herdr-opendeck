@@ -4,6 +4,7 @@
  * without the plugin, or with a contract version we do not understand, there
  * is simply no activity and tiles render exactly as before.
  */
+import type { GlyphName } from "./glyphs";
 
 export type ActivityState = "background" | "scheduled" | "subagents";
 
@@ -61,23 +62,26 @@ export function countdown(nextAt: number, now: number): string {
 	return hours < 48 ? `IN ${hours}H` : `IN ${Math.round(hours / 24)}D`;
 }
 
+export type FooterItem = { glyph: GlyphName; text: string };
+
 /**
- * Compact footer text, dominant activity first, sized for a 144px key:
- * "2 SUB · 1 BG", "1 MON", "LOOP IN 4M", "NEXT IN 2H".
+ * Footer pictograms with counts, dominant activity first: subagents,
+ * background shells, monitors; a countdown ("4M", "NOW") only when nothing
+ * runs.
  */
-export function activityFooter(activity: Activity, now: number): string {
-	const parts: string[] = [];
+export function activityItems(activity: Activity, now: number): FooterItem[] {
+	const items: FooterItem[] = [];
 	if (activity.subagents) {
-		parts.push(`${activity.subagents} SUB`);
+		items.push({ glyph: "subagents", text: String(activity.subagents) });
 	}
 	if (activity.background) {
-		parts.push(`${activity.background} BG`);
+		items.push({ glyph: "shell", text: String(activity.background) });
 	}
 	if (activity.monitors) {
-		parts.push(`${activity.monitors} MON`);
+		items.push({ glyph: "monitor", text: String(activity.monitors) });
 	}
-	if (parts.length === 0 && activity.nextAt !== null) {
-		parts.push(`${activity.loop ? "LOOP" : "NEXT"} ${countdown(activity.nextAt, now)}`);
+	if (items.length === 0 && activity.nextAt !== null) {
+		items.push({ glyph: activity.loop ? "loop" : "clock", text: countdown(activity.nextAt, now).replace(/^IN /, "") });
 	}
-	return parts.slice(0, 2).join(" · ");
+	return items;
 }
