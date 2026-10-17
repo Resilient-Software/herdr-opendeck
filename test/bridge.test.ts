@@ -2,7 +2,7 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import net from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import { Bridge, type Snapshot } from "../src/herdr";
 import { HerdrApiError } from "../src/socket";
@@ -28,6 +28,10 @@ type Request = { id: string; method: string; params: unknown };
 
 const cleanups: (() => void)[] = [];
 const savedPath = process.env.HERDR_PATH;
+
+beforeEach(() => {
+	process.env.HERDR_PATH = "/nonexistent/herdr";
+});
 
 afterEach(() => {
 	while (cleanups.length > 0) {
@@ -456,6 +460,19 @@ describe("Bridge send and tab methods", () => {
 
 	test("CLI failure without a JSON envelope stays a plain error", async () => {
 		stubCli({ stderr: "herdr: cannot connect to server" });
+		const bridge = new Bridge({ socketPath: deadSocketPath(), timeoutMs: 250 });
+		const err = await bridge.sendKeys("w1:p1", ["esc"]).catch((e: unknown) => e);
+		expect(err).toBeInstanceOf(Error);
+		expect(err).not.toBeInstanceOf(HerdrApiError);
+	});
+
+	test("CLI server_not_running stays a plain error", async () => {
+		stubCli({
+			stderr: JSON.stringify({
+				id: "cli:request",
+				error: { code: "server_not_running", message: "no herdr server is running at h.sock" },
+			}),
+		});
 		const bridge = new Bridge({ socketPath: deadSocketPath(), timeoutMs: 250 });
 		const err = await bridge.sendKeys("w1:p1", ["esc"]).catch((e: unknown) => e);
 		expect(err).toBeInstanceOf(Error);

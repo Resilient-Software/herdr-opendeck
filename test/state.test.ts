@@ -287,12 +287,21 @@ describe("resolveTarget", () => {
 			expect(target.ok && target.pane.pane_id).toBe("w3:p1");
 		});
 
-		test("re-pins to an unnamed workspace by its number name", () => {
+		test("never re-pins by a number-derived name", () => {
 			const target = resolveTarget(snap([space("w4", 3, { label: "" })], [agent("w4:p1")]), {
 				target: "w9",
 				targetLabel: "Space 3",
 			});
-			expect(target).toMatchObject({ ok: true, footer: "#3 Space 3", repin: { target: "w4", targetLabel: "Space 3" } });
+			expect(target).toEqual({ ok: false, reason: "gone", footer: "GONE" });
+		});
+
+		test("a trusted id holds while its label drifts", () => {
+			const drifted = snap([space("w2", 1, { label: "cwd-a" })], [agent("w2:p1")]);
+			expect(resolveTarget(drifted, { target: "w2", targetLabel: "work" }, true)).toMatchObject({
+				ok: true,
+				footer: "#1 cwd-a",
+			});
+			expect(resolveTarget(drifted, { target: "w2", targetLabel: "work" })).toMatchObject({ ok: false });
 		});
 
 		test("a label shared by several workspaces is GONE", () => {

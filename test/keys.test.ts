@@ -29,7 +29,7 @@ describe("parseKeys", () => {
 		expect(parseKeys("S-Tab")).toEqual({ error: "unsupported key S-Tab" });
 		expect(parseKeys("home")).toEqual({ error: "unsupported key home" });
 		expect(parseKeys("esc, bogus")).toEqual({ error: "unsupported key bogus" });
-		for (const token of ["f13", "f0", "ctrl+", "ctrl+cc", "ctrl-c", "^c", "ctrl+shift+tab", "hyper+a", "<esc>"]) {
+		for (const token of ["f13", "f0", "ctrl+", "ctrl++", "ctrl+cc", "ctrl-c", "^c", "ctrl+shift+tab", "hyper+a", "<esc>"]) {
 			expect(parseKeys(token)).toEqual({ error: `unsupported key ${token}` });
 		}
 	});

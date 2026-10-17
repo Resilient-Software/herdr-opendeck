@@ -27,8 +27,13 @@ export type Target =
 	  }
 	| { ok: false; reason: "gone" | "none"; footer: string };
 
-const NO_AGENT: Target = { ok: false, reason: "none", footer: "NO AGENT" };
-const GONE: Target = { ok: false, reason: "gone", footer: "GONE" };
+function noAgent(): Target {
+	return { ok: false, reason: "none", footer: "NO AGENT" };
+}
+
+function gone(): Target {
+	return { ok: false, reason: "gone", footer: "GONE" };
+}
 
 export function spaceName(space: Workspace): string {
 	return space.label || `Space ${space.number}`;
@@ -128,16 +133,19 @@ function targetPane(snapshot: Snapshot, space: Workspace, focused: boolean): Pan
 function pinnedSpace(
 	snapshot: Snapshot,
 	setting: TargetSetting,
+	trustId: boolean,
 ): { space: Workspace; repin?: { target: string; targetLabel: string } } | undefined {
 	const { target, targetLabel } = setting;
 	const byId = snapshot.workspaces.find((space) => space.workspace_id === target);
-	if (byId && (!targetLabel || spaceName(byId) === targetLabel)) {
+	if (byId && (trustId || !targetLabel || spaceName(byId) === targetLabel)) {
 		return { space: byId };
 	}
 	if (!targetLabel) {
 		return undefined;
 	}
-	const byLabel = snapshot.workspaces.filter((space) => spaceName(space) === targetLabel);
+	// Number-derived names ("Space 2") shift when herdr renumbers, so only a
+	// real label can carry a pin to another workspace.
+	const byLabel = snapshot.workspaces.filter((space) => space.label === targetLabel);
 	if (byLabel.length !== 1) {
 		return undefined;
 	}
@@ -145,26 +153,28 @@ function pinnedSpace(
 }
 
 /**
- * Herdr reuses workspace ids after a restart, so a pin is only trusted
- * while the stored label still matches.
+ * Herdr reuses workspace ids after a restart, so an untrusted pin only
+ * holds while the stored label still matches. trustId says the caller has
+ * watched this id continuously since it last matched, which covers a
+ * label that drifts with the workspace's working directory.
  */
-export function resolveTarget(snapshot: Snapshot, setting: TargetSetting): Target {
+export function resolveTarget(snapshot: Snapshot, setting: TargetSetting, trustId = false): Target {
 	const focused = focusedSpace(snapshot);
 	if (!setting.target) {
 		const pane = focused && targetPane(snapshot, focused, true);
 		if (!focused || !pane) {
-			return NO_AGENT;
+			return noAgent();
 		}
 		return { ok: true, pane, workspace: focused, pinned: false, footer: `> ${spaceName(focused)}` };
 	}
-	const pinned = pinnedSpace(snapshot, setting);
+	const pinned = pinnedSpace(snapshot, setting, trustId);
 	if (!pinned) {
-		return GONE;
+		return gone();
 	}
 	const { space, repin } = pinned;
 	const pane = targetPane(snapshot, space, space === focused);
 	if (!pane) {
-		return NO_AGENT;
+		return noAgent();
 	}
 	return {
 		ok: true,

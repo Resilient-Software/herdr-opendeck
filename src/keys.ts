@@ -36,7 +36,7 @@ function normaliseKey(token: string): string | undefined {
 		return key;
 	}
 	const base = MODIFIED.exec(key)?.[1];
-	if (base !== undefined && (NAMED_KEYS.has(base) || isSingleChar(base))) {
+	if (base !== undefined && (NAMED_KEYS.has(base) || (isSingleChar(base) && base !== "+"))) {
 		return key;
 	}
 	return undefined;

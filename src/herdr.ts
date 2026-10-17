@@ -220,6 +220,10 @@ function cliApiError(err: unknown): HerdrApiError | undefined {
 	for (const line of stderr.trim().split("\n").reverse()) {
 		try {
 			const error = (JSON.parse(line) as { error?: { code?: unknown; message?: unknown } } | null)?.error;
+			// The CLI could not reach a server either: a transport failure.
+			if (error?.code === "server_not_running") {
+				return undefined;
+			}
 			if (typeof error?.code === "string") {
 				return new HerdrApiError(error.code, typeof error.message === "string" ? error.message : error.code);
 			}
