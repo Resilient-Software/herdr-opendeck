@@ -60,7 +60,7 @@
 			"Name": "Agent Summary",
 			"UUID": "com.resilientsoftware.herdrdeck.summary",
 			"Icon": "icons/list-summary",
-			"Tooltip": "Counts your workspaces by state on one key or the Neo Infobar; press to jump to the one that needs you most, blocked first.",
+			"Tooltip": "Counts your workspaces by state; press to jump to the one that needs you most, blocked first. On Stream Deck Neo it also fits the Infobar.",
 			"Controllers": [
 				"Keypad",
 				"Neo"

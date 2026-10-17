@@ -119,7 +119,7 @@ States always appear in that order. The key has two looks, chosen in the propert
 
 ## Control keys
 
-Five actions send to an agent through Herdr. Each one shows a small uppercase caption at the top left, a large value in the centre, and its target in the footer:
+Five actions act on a target through Herdr. Each one shows a small uppercase caption at the top left, a large value in the centre, and in the footer where a press will go (New Tab shows the folder it will open):
 
 | Action | Settings | Press sends | Face |
 |--------|----------|-------------|------|
@@ -137,7 +137,7 @@ Every control key has a target setting: **Focused agent** (the default) or a **p
 
 - **Focused agent:** Herdr's focused workspace and its focused pane. If that pane runs no agent but exactly one other pane in the workspace does, the key targets that agent instead. Footer: `> api-server`.
 - **Pinned workspace:** the focused pane of the workspace's active tab, else its first pane, with the same agent rule. Footer: `#2 webapp`.
-- A pinned key stores the workspace's ID and its name. Herdr reuses workspace IDs after a restart, so the pin holds only while the ID still belongs to a workspace with that name. If the ID is gone or now names a different workspace, but exactly one workspace has the pinned name, the key re-pins to it and saves the new ID. Otherwise the key shows `GONE`, dims, and a press does nothing.
+- A pinned key stores the workspace's ID and its name. While the plugin watches that ID without a gap in the connection, the pin follows it and keeps the saved name current, so a name that changes with the working directory does not break it. After a gap (Herdr may have restarted, and it reuses workspace IDs) the pin holds only if the ID still belongs to a workspace with that name. If the ID is gone or now names a different workspace, but exactly one workspace has the pinned name as its label, the key re-pins to it and saves the new ID; names derived from a workspace's number never re-pin. Otherwise the key shows `GONE`, dims, and a press does nothing. A pin saved without a name matches by ID alone.
 - With no focused workspace the footer shows `NO AGENT`, the key dims, and a press does nothing.
 
 The footer always shows where a press will go before it is pressed.
@@ -156,7 +156,9 @@ Send Keys uses `pane.send_keys`; New Tab uses `tab.create` with focus, then rais
 - **Cycle** splits its values on commas or new lines. Each press sends the command and the next value (just the value when the command is empty), then advances, wrapping from the last value to the first. The position is saved in the key's settings, so it survives restarts, and fast presses each send the next value. The key shows what it will send; it does not read back what the agent actually uses.
 - **New Tab** checks a configured folder first: if it does not exist the key flashes `NO SUCH DIR` and opens nothing.
 
-**Flashes.** After a press the footer shows the result for about a second: green `SENT` or `OPENED`; red `BLOCKED`, `NOT READY` (the agent has exited or is no longer the pane's foreground process), `BAD KEY`, `NO SUCH DIR` or `FAILED`. Then the live face returns. Do not use the host's generic alert overlay.
+**Flashes.** After a press the footer shows the result for about a second: green `SENT` or `OPENED`; red `BLOCKED`, `NOT READY` (the agent has exited or is no longer the pane's foreground process), `BAD KEY`, `NO SUCH DIR`, `NOT SET`, `GONE` (the pane closed) or `FAILED`. Then the live face returns. Do not use the host's generic alert overlay.
+
+**One send at a time.** Presses are sent in order, each after the previous one finishes: Herdr writes a prompt's Enter shortly after its text, so overlapping prompts would interleave in the agent's input.
 
 ## Interaction vocabulary
 
@@ -195,7 +197,7 @@ The New Herdr Space key renders as a green `+` with `NEW SPACE` below; it dims a
 
 ## Empty, loading, and offline states
 
-- **Starting:** top-left shows `HERDR · CONNECTING`; every other usable key is black. Summary and control keys are dim and inert until the first snapshot.
+- **Starting:** top-left shows `HERDR · CONNECTING`; every other usable key is black. The summary shows `CONNECTING` and control keys are dim; both are inert until the first snapshot.
 - **Online, no workspaces:** top-left shows `NO SPACES · OPEN HERDR`; all other data keys are black and pagers show `0`.
 - **Unused positions:** fully black and inert; do not show fake slot numbers or plus buttons.
 - **Transient poll failure:** keep the last good frame for two failed polls to avoid flicker.

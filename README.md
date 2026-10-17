@@ -108,16 +108,20 @@ npm run build && npm run e2e
 
 `npm run e2e` runs the built plugin against a fake Stream Deck host and a
 throwaway sandbox herdr server, never your own session, presses keys the way
-a user would and checks what reaches the sandbox's panes. `HERDR_BIN` picks the herdr binary (default: `herdr` on `PATH`).
-Key images, boards (PNG via `rsvg-convert`) and `summary.json` land in
-`e2e-out/`.
+a user would and checks what reaches the sandbox's panes. It compiles a small
+stand-in agent with `cc`. `HERDR_BIN` picks the herdr binary (default:
+`herdr` on `PATH`). Key images, boards (PNG via `rsvg-convert`) and
+`summary.json` land in `e2e-out/`.
+
+`sh scripts/render-sheet.sh` renders every key image variant into contact
+sheets at real key size under `dist/sheet/`.
 
 ## Layout
 
 - `src/plugin.ts` — entry point; registers the actions and connects
 - `src/controller.ts` — snapshot loop and key coordination: slots, paging,
-  roles, repaints
-- `src/controls.ts` — Agent Summary, Infobar and control key behaviour
+  the summary and Infobar, control key presses, repaints
+- `src/controls.ts` — control key faces and what a press sends
 - `src/actions.ts` — the action classes
 - `src/state.ts` — workspace states, summary counts, attention order and
   target resolution

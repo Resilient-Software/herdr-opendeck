@@ -13,5 +13,6 @@ const manifest = JSON.parse(readFileSync(file, "utf8"));
 manifest.Software = { ...manifest.Software, MinimumVersion: "7.1" };
 for (const action of manifest.Actions ?? []) {
 	if (Array.isArray(action.Controllers)) action.Controllers = action.Controllers.filter((c) => c !== "Neo");
+	if (typeof action.Tooltip === "string") action.Tooltip = action.Tooltip.replace(/ On Stream Deck Neo [^.]*\./, "");
 }
 writeFileSync(file, `${JSON.stringify(manifest, null, "\t")}\n`);
