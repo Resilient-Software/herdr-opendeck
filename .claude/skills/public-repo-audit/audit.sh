@@ -57,7 +57,7 @@ else
 fi
 
 # Placeholder paths and addresses are fine.
-sed -E 's#/home/(dev|user)/##g; s#[A-Za-z0-9._%+-]+@(example\.(com|org)|users\.noreply\.github\.com)##g' "$tmp/hits" |
+sed -E 's#/home/(dev|user)/##g; s#[A-Za-z0-9._%+-]+@(example\.(com|org|net)|[A-Za-z0-9.-]+\.(invalid|test|example)|users\.noreply\.github\.com)##g' "$tmp/hits" |
 	grep -E -f "$tmp/patterns" > "$tmp/real" || true
 if [ -s "$denylist" ]; then
 	grep -E -f "$denylist" "$tmp/hits" >> "$tmp/real" || true

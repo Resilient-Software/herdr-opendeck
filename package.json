@@ -11,7 +11,8 @@
 		"build": "esbuild src/plugin.ts --bundle --platform=node --target=node24 --format=esm --external:bufferutil --external:utf-8-validate --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=plugin/bin/plugin.mjs",
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
-		"lint": "eslint --max-warnings 0 src test"
+		"lint": "eslint --max-warnings 0 src test",
+		"e2e": "node scripts/e2e/run.mjs"
 	},
 	"dependencies": {
 		"@elgato/streamdeck": "^3.0.2",

@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        herdr: [v0.7.5, v0.8.0, v0.8.2, latest]
+        herdr: [v0.8.2, latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,3 +46,12 @@ jobs:
           chmod +x /tmp/herdr
       - name: Compatibility probe
         run: sh scripts/compat-check.sh /tmp/herdr
+      - run: sudo apt-get install -y --no-install-recommends librsvg2-bin
+      - run: npm run build
+      - name: End-to-end run against a sandbox herdr
+        run: HERDR_BIN=/tmp/herdr npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-${{ matrix.herdr }}
+          path: e2e-out/

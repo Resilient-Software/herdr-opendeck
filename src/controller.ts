@@ -118,6 +118,7 @@ export class DeckController {
 	private readonly rendered = new Map<string, string>();
 	private readonly resubscribe = new Backoff(SUBSCRIBE_BACKOFF_CAP_TICKS);
 	private readonly roles = new Map<string, Role>();
+	private sending: Promise<void> = Promise.resolve();
 	private snapshot: Snapshot | undefined;
 	private subscribeFailing = false;
 	private subscribed = false;
@@ -403,7 +404,10 @@ export class DeckController {
 			this.persist(id, inst, { ...inst.settings, index: next });
 			this.render();
 		}
-		void pressControl(kind, settings, target, { bridge: this.bridge, raise: this.raise }, cycleValue).then((flash) => {
+		// One send at a time: herdr writes a prompt's Enter about 300 ms after
+		// its text, so overlapping prompts would interleave in the agent's input.
+		this.sending = this.sending.then(async () => {
+			const flash = await pressControl(kind, settings, target, { bridge: this.bridge, raise: this.raise }, cycleValue);
 			if (!flash.ok) {
 				this.log.info(`${kind} press on ${target.pane.pane_id}: ${flash.text}`);
 			}

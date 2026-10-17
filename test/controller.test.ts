@@ -226,6 +226,21 @@ describe("control keys", () => {
 		expect(key.image).toContain(">haiku<");
 	});
 
+	test("presses send one at a time, so prompts never interleave", async () => {
+		const d = await deck();
+		const events: string[] = [];
+		d.bridge.promptAgent = async (_pane: string, text: string) => {
+			events.push(`start ${text}`);
+			await new Promise((resolve) => setTimeout(resolve, 20));
+			events.push(`end ${text}`);
+		};
+		d.place("y", "cycle", 0, 0, { command: "/model", values: "opus, sonnet" });
+		d.press("y");
+		d.press("y");
+		await new Promise((resolve) => setTimeout(resolve, 80));
+		expect(events).toEqual(["start /model opus", "end /model opus", "start /model sonnet", "end /model sonnet"]);
+	});
+
 	test("Cycle resumes from a saved index", async () => {
 		const d = await deck();
 		d.place("y", "cycle", 0, 0, { command: "/model", values: "opus, sonnet, haiku", index: 2 });
