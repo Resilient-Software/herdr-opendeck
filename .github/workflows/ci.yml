@@ -50,8 +50,12 @@ jobs:
       - run: npm run build
       - name: End-to-end run against a sandbox herdr
         run: HERDR_BIN=/tmp/herdr npm run e2e
+      - name: End-to-end run without herdr-agent-activity
+        run: HERDR_BIN=/tmp/herdr E2E_ACTIVITY=0 E2E_OUT=e2e-out-plain npm run e2e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: e2e-${{ matrix.herdr }}
-          path: e2e-out/
+          path: |
+            e2e-out/
+            e2e-out-plain/

@@ -112,6 +112,16 @@ describe("countStates", () => {
 		});
 	});
 
+	test("without activity tokens every quiet agent counts as done or idle", () => {
+		const workspaces = [
+			space("w1", 1, { label: "api-server", agent_status: "working" }),
+			space("w2", 2, { label: "docs", agent_status: "idle" }),
+			space("w3", 3, { label: "billing", agent_status: "done" }),
+		];
+		const counts = countStates(snap(workspaces, workspaces.map((ws) => agent(`${ws.workspace_id}:p1`))));
+		expect(counts).toMatchObject({ working: 1, background: 0, scheduled: 0, done: 1, idle: 1, total: 3, nextAt: null });
+	});
+
 	test("an empty session counts nothing", () => {
 		expect(countStates(snap([], []))).toEqual({
 			blocked: 0,

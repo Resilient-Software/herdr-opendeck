@@ -105,8 +105,9 @@ npm run build && npm run e2e
 throwaway sandbox herdr server, never your own session, presses keys the way
 a user would and checks what reaches the sandbox's panes. It compiles a small
 stand-in agent with `cc`. `HERDR_BIN` picks the herdr binary (default:
-`herdr` on `PATH`). Key images, boards (PNG via `rsvg-convert`) and
-`summary.json` land in `e2e-out/`.
+`herdr` on `PATH`). `E2E_ACTIVITY=0` runs it without herdr-agent-activity
+tokens, as the deck looks when that plugin is not installed. Key images,
+boards (PNG via `rsvg-convert`) and `summary.json` land in `e2e-out/`.
 
 `sh scripts/render-sheet.sh` renders every key image variant into contact
 sheets at real key size under `dist/sheet/`.

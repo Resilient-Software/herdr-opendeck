@@ -7,3 +7,4 @@ go.work
 go.work.sum
 dist/
 e2e-out/
+e2e-out-plain/

@@ -11,6 +11,8 @@
  *   E2E_OUT     artifact directory (default: e2e-out/)
  *   E2E_SKIP    comma list of phases to skip
  *   E2E_PLUGIN  .sdPlugin dir to test instead of ./plugin (copied, never modified)
+ *   E2E_ACTIVITY=0  publish no herdr-agent-activity tokens: the deck as
+ *               it looks without that plugin
  *
  * Artifacts: per-phase key SVG/PNGs, board PNGs, messages.jsonl (every
  * websocket frame both ways), summary.json. Each phase runs even if an
@@ -33,6 +35,7 @@ const MANIFEST = JSON.parse(readFileSync(join(PLUGIN_SRC, "manifest.json"), "utf
 const UUID = (name) => `com.resilientsoftware.herdrdeck.${name}`;
 const HERDR_BIN = process.env.HERDR_BIN ?? which("herdr");
 const SKIP = new Set((process.env.E2E_SKIP ?? "").split(",").filter(Boolean));
+const ACTIVITY = process.env.E2E_ACTIVITY !== "0";
 
 const COLORS = {
 	focused: "#a6e3a1",
@@ -234,13 +237,15 @@ try {
 		for (const name of ["infra", "docs", "scratch"]) {
 			await sandbox.reportAgent(ws[name].paneId, "idle");
 		}
-		await sandbox.reportActivity(ws.infra.workspaceId, { rsact_v: "1", rsact_state: "subagents", rsact_subagents: "2", rsact_background: "1" });
-		await sandbox.reportActivity(ws.docs.workspaceId, {
-			rsact_v: "1",
-			rsact_state: "scheduled",
-			rsact_loop: "1",
-			rsact_next_at: new Date(Date.now() + 17 * 60_000).toISOString(),
-		});
+		if (ACTIVITY) {
+			await sandbox.reportActivity(ws.infra.workspaceId, { rsact_v: "1", rsact_state: "subagents", rsact_subagents: "2", rsact_background: "1" });
+			await sandbox.reportActivity(ws.docs.workspaceId, {
+				rsact_v: "1",
+				rsact_state: "scheduled",
+				rsact_loop: "1",
+				rsact_next_at: new Date(Date.now() + 17 * 60_000).toISOString(),
+			});
+		}
 		const detected = await host.waitFor(
 			async () => (await sandbox.snapshot()).panes.find((p) => p.pane_id === ws.agent.paneId && p.agent === "claude"),
 			6000,
@@ -280,12 +285,20 @@ try {
 		check("working tile is yellow with repo + branch", tile("api").includes(COLORS.working) && tile("api").includes("api-server") && tile("api").includes("feat/login"));
 		check("blocked tile is red", tile("web").includes(COLORS.blocked));
 		const infra = tile("infra");
-		check(
-			"subagent activity tile is blue with icon counts, no SUB/BG words",
-			infra.includes(COLORS.activity) && />2<\/text>/.test(infra) && />1<\/text>/.test(infra) && !/SUB|BG/.test(infra),
-		);
 		const docs = tile("docs");
-		check("scheduled-check tile is mauve with a loop countdown", docs.includes(COLORS.scheduled) && docs.includes(COLORS.mauve) && /1[67]M/.test(docs), /\d+M/.exec(docs)?.[0]);
+		if (ACTIVITY) {
+			check(
+				"subagent activity tile is blue with icon counts, no SUB/BG words",
+				infra.includes(COLORS.activity) && />2<\/text>/.test(infra) && />1<\/text>/.test(infra) && !/SUB|BG/.test(infra),
+			);
+			check("scheduled-check tile is mauve with a loop countdown", docs.includes(COLORS.scheduled) && docs.includes(COLORS.mauve) && /1[67]M/.test(docs), /\d+M/.exec(docs)?.[0]);
+		} else {
+			for (const [label, svg] of [["infra", infra], ["docs", docs]]) {
+				check(`without activity, idle ${label} is a plain IDLE tile`, svg.includes(">IDLE<") && !svg.includes("<rect") && !svg.includes("<g transform"));
+			}
+		}
+		const noTokens = ["api", "web", "scratch", "notes"].filter((label) => tile(label).includes("<g transform"));
+		check("workspaces without activity tokens never show activity icons", noTokens.length === 0, noTokens.join(","));
 		check("plain idle tile names its state", tile("scratch").includes(">IDLE<") && !tile("scratch").includes("<rect"));
 		check("focused tile is green", tile("notes").includes(COLORS.focused));
 		check("unused participating key is an inert dot", svgAt(3, 1).includes("<circle"));
@@ -302,7 +315,8 @@ try {
 		check("keyUp on a space tile focuses that workspace in herdr", true, `${focusMs} ms keyUp -> herdr focused`);
 		const greenMs = await host.waitFor(() => (svgOf(apiKey).includes(COLORS.focused) ? Date.now() - t0 : 0), 4000, "green tile");
 		check("pressed tile turns green once herdr confirms", true, `${greenMs} ms keyUp -> green setImage`);
-		check("previously focused tile loses green", !tile("notes").includes(COLORS.focused));
+		const lostGreen = await host.waitFor(() => !tile("notes").includes(COLORS.focused), 2000, "notes loses green").then(() => true, () => false);
+		check("previously focused tile loses green", lostGreen);
 		check("HERDR_DECK_NO_RAISE keeps the terminal where it is", !existsSync(openLog));
 		await host.waitForQuiet(800);
 		board("after-press", "after keyUp on 'api'");
@@ -310,8 +324,12 @@ try {
 
 	await phase("summary", async () => {
 		const summary = svgOf(K.summary);
-		// working api, blocked web, busy infra, timer docs, idle scratch + agent; notes runs no agent.
+		// working api, blocked web, busy infra, timer docs (idle without activity), idle scratch + agent; notes runs no agent.
 		check("summary counts the six workspaces running agents", summary.includes(">6</text>"), />(\d+)<\/text>/.exec(summary)?.[1]);
+		check(
+			ACTIVITY ? "summary ring includes the busy and timer states" : "summary ring has no busy or timer segments without activity",
+			ACTIVITY === (summary.includes('stroke="#89b4fa"') && summary.includes('stroke="#cba6f7"')),
+		);
 		check("summary calls out the blocked agent", summary.includes("1 BLOCKED"));
 		await host.press(K.summary);
 		await host.waitFor(async () => (await sandbox.focusedWorkspaceId()) === ws.web.workspaceId, 4000, "focus blocked workspace");
