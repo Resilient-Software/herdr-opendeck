@@ -5,7 +5,7 @@
  * which boots an isolated session first.
  */
 import { Bridge, type Snapshot, workingDir } from "../src/herdr";
-import { defaultSocketPath, SocketClient } from "../src/socket";
+import { defaultSocketPath, HerdrApiError, SocketClient } from "../src/socket";
 
 function fail(violation: string): never {
 	console.error(`COMPAT FAIL: ${violation}`);
@@ -80,6 +80,29 @@ const focused = await bridge.snapshot().catch((err: unknown) => fail(`api snapsh
 const now = focused.workspaces.find((space) => space.workspace_id === target.workspace_id);
 if (!now?.focused) {
 	fail(`workspace focus ${target.workspace_id} not reflected in the next snapshot`);
+}
+
+const pane = focused.panes.find((p) => p.workspace_id === target.workspace_id);
+if (!pane) {
+	fail(`no pane in workspace ${target.workspace_id}`);
+}
+await bridge.sendText(pane.pane_id, "echo compat-text").catch((err: unknown) => fail(`pane.send_text: ${err}`));
+await bridge.sendKeys(pane.pane_id, ["enter"]).catch((err: unknown) => fail(`pane.send_keys: ${err}`));
+await bridge.sendInput(pane.pane_id, "echo compat-input").catch((err: unknown) => fail(`pane.send_input: ${err}`));
+await bridge.sendKeys(pane.pane_id, ["S-Tab"]).then(
+	() => fail("pane.send_keys accepted an invalid key name"),
+	(err: unknown) => {
+		if (!(err instanceof HerdrApiError) || err.code !== "invalid_key") {
+			fail(`invalid key name did not fail with invalid_key: ${err}`);
+		}
+	},
+);
+const tabsBefore = (focused.tabs ?? []).filter((tab) => tab.workspace_id === target.workspace_id).length;
+await bridge.createTab(target.workspace_id, pane.cwd).catch((err: unknown) => fail(`tab.create: ${err}`));
+const tabbed = await bridge.snapshot().catch((err: unknown) => fail(`api snapshot after tab.create: ${err}`));
+const tabsAfter = (tabbed.tabs ?? []).filter((tab) => tab.workspace_id === target.workspace_id).length;
+if (tabsAfter !== tabsBefore + 1) {
+	fail(`tab.create did not add a tab (${tabsBefore} -> ${tabsAfter})`);
 }
 
 for (const space of focused.workspaces) {

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { defaultSocketPath, SocketClient } from "../src/socket";
+import { defaultSocketPath, HerdrApiError, SocketClient } from "../src/socket";
 
 type Request = { id: string; method: string; params: unknown };
 
@@ -114,6 +114,29 @@ describe("SocketClient.request", () => {
 		await expect(client(server.path).request("workspace.focus", { workspace_id: "w9" })).rejects.toThrow(
 			"no such workspace",
 		);
+	});
+
+	test("error envelope rejects with HerdrApiError carrying code", async () => {
+		const server = startServer((req, socket) => {
+			reply(socket, { id: req.id, error: { code: "agent_blocked", message: "agent w1:p5 is blocked" } });
+		});
+		const request = client(server.path).request("agent.prompt", { target: "w1:p5", text: "/review" });
+		await expect(request).rejects.toBeInstanceOf(HerdrApiError);
+		await expect(request).rejects.toMatchObject({
+			name: "HerdrApiError",
+			code: "agent_blocked",
+			message: "agent w1:p5 is blocked",
+		});
+	});
+
+	test("transport failures are plain errors, not HerdrApiError", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "herdr-sock-"));
+		cleanups.push(() => rmSync(dir, { recursive: true, force: true }));
+		const err = await client(join(dir, "missing.sock"))
+			.request("ping", {})
+			.catch((e: unknown) => e);
+		expect(err).toBeInstanceOf(Error);
+		expect(err).not.toBeInstanceOf(HerdrApiError);
 	});
 
 	test("correlates concurrent requests answered out of order", async () => {
